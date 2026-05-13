@@ -24,35 +24,77 @@
             <div class="row">
                 <!-- Статистика -->
                 <div class="col-lg-4 mb-3">
-                    <div class="card text-center" style="background-color: #16213e; border-color: #333;">
+                    <div class="card text-center steam-card">
                         <div class="card-body">
-                            <h6 style="color: #999;">Мои заказы</h6>
-                            <h3 class="text-primary">{{ orders_count }}</h3>
+                            <h6 class="text-muted">Мои заказы</h6>
+                            <h3 class="text-info">{{ orders_count }}</h3>
                         </div>
                     </div>
                 </div>
                 
                 <div class="col-lg-4 mb-3">
-                    <div class="card text-center" style="background-color: #16213e; border-color: #333;">
+                    <div class="card text-center steam-card">
                         <div class="card-body">
-                            <h6 style="color: #999;">Библиотека</h6>
+                            <h6 class="text-muted">Библиотека</h6>
                             <h3 class="text-success">{{ library_count }}</h3>
                         </div>
                     </div>
                 </div>
                 
                 <div class="col-lg-4 mb-3">
-                    <div class="card text-center" style="background-color: #16213e; border-color: #333;">
+                    <div class="card text-center steam-card">
                         <div class="card-body">
-                            <h6 style="color: #999;">Баланс</h6>
-                            <h3 class="game-price">{{ balance }} ₽</h3>
+                            <h6 class="text-muted">Баланс</h6>
+                            <h3 class="price-tag">{{ balance }} ₽</h3>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Достижения -->
+            <div class="card steam-card mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-trophy text-warning me-2"></i> Достижения
+                        </h5>
+                        <a href="#" class="btn btn-sm btn-outline-info">Все достижения</a>
+                    </div>
+
+                    {% with user_achievements=user.achievements.all|slice:':6' %}
+                        {% if user_achievements %}
+                            <div class="row">
+                                {% for ua in user_achievements %}
+                                    <div class="col-6 col-md-4 col-lg-2 mb-3">
+                                        <div class="achievement-card text-center p-2 rounded" 
+                                             style="background-color: #1f2a3a; border: 1px solid #3d4f5f;">
+                                            <div class="mb-2">
+                                                {% if ua.achievement.icon %}
+                                                    <img src="{{ ua.achievement.icon.url }}" width="48" height="48" style="object-fit: contain;">
+                                                {% else %}
+                                                    <i class="fas fa-trophy fa-2x text-warning"></i>
+                                                {% endif %}
+                                            </div>
+                                            <div class="fw-semibold small text-white" style="line-height: 1.2;">
+                                                {{ ua.achievement.name }}
+                                            </div>
+                                            <small class="text-muted">{{ ua.unlocked_at|date:"d.m.Y" }}</small>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4 text-muted">
+                                <i class="fas fa-trophy fa-3x mb-3 opacity-50"></i>
+                                <p class="mb-0">Пока нет достижений.<br>Совершайте покупки и пишите отзывы!</p>
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+
             <!-- Информация профиля -->
-            <div class="card mb-3" style="background-color: #16213e; border-color: #333;">
+            <div class="card steam-card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Информация профиля</h5>
                     <p><strong>Имя пользователя:</strong> {{ user.username }}</p>
@@ -62,7 +104,7 @@
             </div>
             
             <!-- Ссылки на быстрый переход -->
-            <div class="card card-dark">
+            <div class="card steam-card">
                 <div class="card-body">
                     <h5 class="card-title">Быстрые ссылки</h5>
                     <div class="d-grid gap-2">
