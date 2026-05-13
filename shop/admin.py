@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
+from django.db.models import F
+from decimal import Decimal
 from .models import Game, GameKey, Cart, Order, OrderGame, Review, BalanceTopUp, UserProfile
 
 
@@ -18,6 +20,18 @@ class GameKeyAdmin(admin.ModelAdmin):
     list_filter = ('game', 'is_used')
     search_fields = ('game__title', 'key')
 
+    actions = ['mark_as_used', 'mark_as_unused']
+
+    @admin.action(description='Пометить как использованные')
+    def mark_as_used(self, request, queryset):
+        updated = queryset.update(is_used=True)
+        self.message_user(request, f'{updated} ключей помечены как использованные.')
+
+    @admin.action(description='Пометить как неиспользованные')
+    def mark_as_unused(self, request, queryset):
+        updated = queryset.update(is_used=False)
+        self.message_user(request, f'{updated} ключей помечены как неиспользованные.')
+
 
 @admin.register(Cart)
 class CartAdmin(admin.ModelAdmin):
@@ -32,6 +46,18 @@ class OrderAdmin(admin.ModelAdmin):
     search_fields = ('user__username',)
     readonly_fields = ('created_at',)
 
+    actions = ['mark_as_completed', 'mark_as_cancelled']
+
+    @admin.action(description='Пометить как выполненные')
+    def mark_as_completed(self, request, queryset):
+        updated = queryset.update(status='completed')
+        self.message_user(request, f'{updated} заказов помечены как выполненные.')
+
+    @admin.action(description='Отменить заказы')
+    def mark_as_cancelled(self, request, queryset):
+        updated = queryset.update(status='cancelled')
+        self.message_user(request, f'{updated} заказов отменены.')
+
 
 @admin.register(OrderGame)
 class OrderGameAdmin(admin.ModelAdmin):
@@ -45,6 +71,19 @@ class ReviewAdmin(admin.ModelAdmin):
     list_filter = ('rating', 'created_at', 'game')
     search_fields = ('game__title', 'user__username')
     readonly_fields = ('created_at',)
+
+    actions = ['approve_reviews', 'hide_reviews']
+
+    @admin.action(description='Одобрить отзывы')
+    def approve_reviews(self, request, queryset):
+        # Можно добавить поле is_approved в модель при необходимости
+        updated = queryset.update(is_approved=True)
+        self.message_user(request, f'{updated} отзывов одобрено.')
+
+    @admin.action(description='Скрыть отзывы')
+    def hide_reviews(self, request, queryset):
+        updated = queryset.update(is_approved=False)
+        self.message_user(request, f'{updated} отзывов скрыто.')
 
 
 @admin.register(BalanceTopUp)
@@ -61,7 +100,6 @@ class UserProfileInline(admin.StackedInline):
     verbose_name_plural = 'Профиль пользователя'
     fk_name = 'user'
     fields = ('balance', 'preferred_currency', 'role', 'avatar')
-    readonly_fields = ('created_at',)  # если есть такое поле
 
 
 class UserAdmin(BaseUserAdmin):
@@ -80,7 +118,31 @@ class UserProfileAdmin(admin.ModelAdmin):
         ('Роль и аватар', {'fields': ('role', 'avatar')}),
     )
 
+    actions = ['add_balance_1000', 'make_moderator', 'make_regular_user', 'reset_balance']
 
-# Перерегистрируем стандартную модель User с нашим Inline
+    @admin.action(description='Пополнить баланс на 1000')
+    def add_balance_1000(self, request, queryset):
+        for profile in queryset:
+            profile.balance += Decimal('1000.00')
+            profile.save()
+        self.message_user(request, f'Баланс пополнен на 1000 у {queryset.count()} пользователей.')
+
+    @admin.action(description='Сделать модератором')
+    def make_moderator(self, request, queryset):
+        updated = queryset.update(role='moderator')
+        self.message_user(request, f'{updated} пользователей стали модераторами.')
+
+    @admin.action(description='Сделать обычным пользователем')
+    def make_regular_user(self, request, queryset):
+        updated = queryset.update(role='user')
+        self.message_user(request, f'{updated} пользователей стали обычными пользователями.')
+
+    @admin.action(description='Сбросить баланс до 0')
+    def reset_balance(self, request, queryset):
+        updated = queryset.update(balance=Decimal('0.00'))
+        self.message_user(request, f'Баланс сброшен у {updated} пользователей.')
+
+
+# Перерегистрируем стандартную модель User с Inline
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
