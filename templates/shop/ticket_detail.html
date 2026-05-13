@@ -6,23 +6,43 @@
 {% block title %}Заявка #{{ ticket.id }}{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h4>Заявка: {{ ticket.subject }}</h4>
-    <p class="text-muted">Status: <strong>{{ ticket.get_status_display }}</strong></p>
+<div class="container" style="max-width: 820px;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">Заявка: {{ ticket.subject }}</h4>
+        <span class="badge fs-6 
+            {% if ticket.status == 'open' %}bg-warning text-dark
+            {% elif ticket.status == 'in_progress' %}bg-info
+            {% else %}bg-success
+            {% endif %}">
+            {{ ticket.get_status_display }}
+        </span>
+    </div>
 
     <div class="card bg-dark mb-4">
         <div class="card-body">
-            <strong>{{ ticket.user.username }}</strong> <small class="text-muted">{{ ticket.created_at|date:"d.m H:i" }}</small>
-            <p class="mt-2">{{ ticket.message }}</p>
+            <div class="d-flex justify-content-between">
+                <strong>{{ ticket.user.username }}</strong>
+                <small class="text-muted">{{ ticket.created_at|date:"d.m.Y H:i" }}</small>
+            </div>
+            <p class="mt-3 mb-0">{{ ticket.message }}</p>
         </div>
     </div>
 
-    <h5>Ответы</h5>
+    <h5 class="mb-3">Переписка</h5>
+
     {% for reply in replies %}
-    <div class="card mb-2 {% if reply.is_staff_reply %}border-primary{% endif %}">
+    <div class="card mb-3 {% if reply.is_staff_reply %}border border-primary{% endif %}">
         <div class="card-body">
-            <strong>{% if reply.is_staff_reply %}👤 Поддержка{% else %}{{ reply.user.username }}{% endif %}</strong>
-            <small class="text-muted"> - {{ reply.created_at|date:"d.m H:i" }}</small>
+            <div class="d-flex justify-content-between">
+                <strong>
+                    {% if reply.is_staff_reply %}
+                        <span class="text-primary">👤 Поддержка</span>
+                    {% else %}
+                        {{ reply.user.username }}
+                    {% endif %}
+                </strong>
+                <small class="text-muted">{{ reply.created_at|date:"d.m H:i" }}</small>
+            </div>
             <p class="mt-2 mb-0">{{ reply.message }}</p>
         </div>
     </div>
@@ -31,9 +51,12 @@
     <form method="post" class="mt-4">
         {% csrf_token %}
         <div class="mb-3">
-            <textarea name="message" class="form-control" placeholder="Напишите ответ..." rows="3" required></textarea>
+            <textarea name="message" class="form-control" rows="3" placeholder="Напишите ответ..." required></textarea>
         </div>
-        <button type="submit" class="btn btn-primary">Отправить</button>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Отправить</button>
+            <a href="{% url 'shop:ticket_list' %}" class="btn btn-outline-secondary">К списку</a>
+        </div>
     </form>
 </div>
 {% endblock %}

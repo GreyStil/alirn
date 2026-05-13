@@ -1,13 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal
 
 GENRE_CHOICES = [('action','Action'),('rpg','RPG'),('adventure','Adventure'),('strategy','Strategy'),('shooter','Shooter'),('puzzle','Puzzle'),('sports','Sports'),('racing','Racing'),('simulation','Simulation'),('indie','Indie')]
 PLATFORM_CHOICES = [('steam','Steam'),('epic','Epic Games'),('battle_net','Battle.net'),('gog','GOG'),('uplay','Uplay')]
 CURRENCY_CHOICES = [('USD','USD $'),('EUR','EUR €')]
 USER_ROLES = [('user','User'),('moderator','Moderator'),('support','Support'),('admin','Admin')]
-ORDER_STATUS_CHOICES = [('pending','Pending'),('paid','Paid'),('completed','Completed'),('cancelled','Cancelled')]
+ORDER_STATUS = [('pending','Pending'),('paid','Paid'),('completed','Completed'),('cancelled','Cancelled')]
 TICKET_STATUS = [('open','Open'),('in_progress','In Progress'),('closed','Closed')]
 
 class Game(models.Model):
@@ -27,13 +26,17 @@ class Game(models.Model):
     sales_count = models.IntegerField(default=0)
 
     def __str__(self): return self.title
+
     @property
     def current_price(self):
         if self.discount_percent > 0:
-            return self.price * (100 - self.discount_percent) / 100
+            return round(self.price * (100 - self.discount_percent) / 100, 2)
         return self.price
-    def get_price_in_currency(self, currency='USD'):
-        return round(self.current_price * (Decimal('0.92') if currency == 'EUR' else 1), 2)
+
+    def get_display_price(self, currency='USD'):
+        rate = Decimal('0.92') if currency == 'EUR' else Decimal('1')
+        return round(self.current_price * rate, 2)
+
     @property
     def display_image(self):
         return self.image.url if self.image else (self.image_url or 'https://via.placeholder.com/300x200')
@@ -50,7 +53,7 @@ class Cart(models.Model):
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='paid')
+    status = models.CharField(max_length=20, choices=ORDER_STATUS, default='paid')
     created_at = models.DateTimeField(auto_now_add=True)
 
 class OrderGame(models.Model):
@@ -109,8 +112,12 @@ class UserProfile(models.Model):
     favorites = models.ManyToManyField(Game, blank=True)
     owned_games = models.ManyToManyField(Game, blank=True)
 
-    def __str__(self): return self.user.username
+    def __str__(self): return f"{self.user.username} ({self.role})"
+
     @property
-    def is_moderator(self): return self.role in ['moderator', 'admin', 'support']
+    def is_moderator(self):
+        return self.role in ['moderator', 'admin', 'support']
+
     @property
-    def is_support(self): return self.role in ['support', 'admin']
+    def is_support(self):
+        return self.role in ['support', 'admin']

@@ -9,26 +9,38 @@
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="section-title">🎫 Мои заявки</h2>
-        <a href="{% url 'shop:create_ticket' %}" class="btn btn-primary">Создать заявку</a>
+        <a href="{% url 'shop:create_ticket' %}" class="btn btn-primary">Новая заявка</a>
     </div>
 
     {% if tickets %}
-        <div class="list-group">
-            {% for ticket in tickets %}
-            <a href="{% url 'shop:ticket_detail' ticket.id %}" class="list-group-item list-group-item-action bg-dark text-light mb-2">
-                <div class="d-flex w-100 justify-content-between">
-                    <h5>{{ ticket.subject }}</h5>
-                    <small>{{ ticket.created_at|date:"d.m.Y" }}</small>
-                </div>
-                <p class="mb-1">{{ ticket.message|truncatechars:100 }}</p>
-                <span class="badge bg-{% if ticket.status == 'open' %}warning{% elif ticket.status == 'in_progress' %}info{% else %}success{% endif %}">
+    <div class="list-group">
+        {% for ticket in tickets %}
+        <a href="{% url 'shop:ticket_detail' ticket.id %}" class="list-group-item list-group-item-action bg-dark text-light mb-2 rounded">
+            <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1">{{ ticket.subject }}</h6>
+                <small class="text-muted">{{ ticket.created_at|date:"d.m.Y H:i" }}</small>
+            </div>
+            <p class="mb-1 text-muted small">{{ ticket.message|truncatechars:110 }}</p>
+            <div>
+                <span class="badge 
+                    {% if ticket.status == 'open' %}bg-warning text-dark
+                    {% elif ticket.status == 'in_progress' %}bg-info
+                    {% else %}bg-success
+                    {% endif %}">
                     {{ ticket.get_status_display }}
                 </span>
-            </a>
-            {% endfor %}
-        </div>
+                {% if user.profile.is_support %}
+                    <small class="ms-2 text-muted">{{ ticket.user.username }}</small>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
     {% else %}
-        <p class="text-muted">У вас пока нет заявок.</p>
+        <div class="text-center py-5">
+            <p class="text-muted">У вас пока нет заявок.</p>
+            <a href="{% url 'shop:create_ticket' %}" class="btn btn-outline-light">Создать первую заявку</a>
+        </div>
     {% endif %}
 </div>
 {% endblock %}
