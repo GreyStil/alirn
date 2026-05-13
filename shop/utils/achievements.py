@@ -1,25 +1,21 @@
 from decimal import Decimal
-from django.utils import timezone
-from shop.models import Achievement, UserAchievement, UserProfile
+from shop.models import Achievement, UserAchievement
 
 
-def get_or_create_achievement(name, description, points=10, rarity='common', game=None):
-    """Helper to get or create achievement safely."""
+def get_or_create_achievement(name, description, points=10, rarity='common'):
     achievement, created = Achievement.objects.get_or_create(
         name=name,
         defaults={
             'description': description,
             'points': points,
-            'rarity': rarity,
-            'game': game
+            'rarity': rarity
         }
     )
     return achievement
 
 
 def award_achievement(user, achievement):
-    """Award achievement to user if not already awarded."""
-    user_achievement, created = UserAchievement.objects.get_or_create(
+    obj, created = UserAchievement.objects.get_or_create(
         user=user,
         achievement=achievement
     )
@@ -27,10 +23,6 @@ def award_achievement(user, achievement):
 
 
 def check_and_award_achievements(user):
-    """
-    Main function to check and award achievements based on user activity.
-    Call this after important actions (purchase, review, top-up).
-    """
     if not user.is_authenticated:
         return []
 
@@ -40,70 +32,37 @@ def check_and_award_achievements(user):
 
     newly_awarded = []
 
-    # === 1. Первая покупка ===
-    if user.orders.filter(status__in=['paid', 'completed']).exists():
-        achievement = get_or_create_achievement(
-            "Первые шаги",
-            "Совершите свою первую покупку в магазине.",
-            points=10,
-            rarity='common'
-        )
-        if award_achievement(user, achievement):
-            newly_awarded.append(achievement)
+    # Первая покупка
+    if user.orders.exists():
+        ach = get_or_create_achievement("Первые шаги", "Совершите первую покупку", 10, 'common')
+        if award_achievement(user, ach):
+            newly_awarded.append(ach)
 
-    # === 2. Коллекционер ===
-    owned_count = profile.owned_games.count()
+    # Коллекционер
+    count = profile.owned_games.count()
+    if count >= 5:
+        ach = get_or_create_achievement("Коллекционер I", "Соберите 5 игр", 15, 'common')
+        if award_achievement(user, ach):
+            newly_awarded.append(ach)
+    if count >= 10:
+        ach = get_or_create_achievement("Коллекционер II", "Соберите 10 игр", 25, 'rare')
+        if award_achievement(user, ach):
+            newly_awarded.append(ach)
+    if count >= 50:
+        ach = get_or_create_achievement("Коллекционер III", "Соберите 50 игр", 50, 'epic')
+        if award_achievement(user, ach):
+            newly_awarded.append(ach)
 
-    if owned_count >= 5:
-        achievement = get_or_create_achievement(
-            "Коллекционер I",
-            "Соберите 5 игр в своей библиотеке.",
-            points=15,
-            rarity='common'
-        )
-        if award_achievement(user, achievement):
-            newly_awarded.append(achievement)
-
-    if owned_count >= 10:
-        achievement = get_or_create_achievement(
-            "Коллекционер II",
-            "Соберите 10 игр в своей библиотеке.",
-            points=25,
-            rarity='rare'
-        )
-        if award_achievement(user, achievement):
-            newly_awarded.append(achievement)
-
-    if owned_count >= 50:
-        achievement = get_or_create_achievement(
-            "Коллекционер III",
-            "Соберите 50 игр в своей библиотеке.",
-            points=50,
-            rarity='epic'
-        )
-        if award_achievement(user, achievement):
-            newly_awarded.append(achievement)
-
-    # === 3. Первый отзыв ===
+    # Первый отзыв
     if user.reviews.exists():
-        achievement = get_or_create_achievement(
-            "Критик",
-            "Напишите свой первый отзыв на игру.",
-            points=10,
-            rarity='common'
-        )
-        if award_achievement(user, achievement):
-            newly_awarded.append(achievement)
+        ach = get_or_create_achievement("Критик", "Напишите первый отзыв", 10, 'common')
+        if award_achievement(user, ach):
+            newly_awarded.append(ach)
 
-    # === 4. Первое пополнение баланса ===
+    # Первое пополнение
     if user.balance_topups.exists():
-        achievement = get_or_create_achievement(
-            "Инвестор",
-            "Пополните баланс в первый раз.",
-            points=10,
-            rarity='common'
-        )
-        if award_achievement(user, achievement):
-            newly_awarded.append(achievement)
+        ach = get_or_create_achievement("Инвестор", "Пополните баланс первый раз", 10, 'common')
+        if award_achievement(user, ach):
+            newly_awarded.append(ach)
 
     return newly_awarded
