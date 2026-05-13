@@ -12,46 +12,44 @@
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="section-title mb-0">🎮 Каталог игр</h2>
-        <a href="{% url 'shop:index' %}" class="btn btn-outline-light btn-sm">← На главную</a>
+        <span class="text-muted">{{ games.paginator.count }} игр</span>
     </div>
 
-    <!-- Простой поиск -->
-    <div class="row mb-4">
-        <div class="col-md-8 mx-auto">
-            <form method="get" class="d-flex">
-                <input type="text" name="q" class="form-control form-control-lg" placeholder="Поиск игр..." value="{{ request.GET.q }}">
-                <button type="submit" class="btn btn-primary btn-lg ms-2">Поиск</button>
-            </form>
+    <!-- Поиск -->
+    <form method="get" class="mb-4">
+        <div class="input-group input-group-lg">
+            <input type="text" name="q" class="form-control" placeholder="Поиск игр..." value="{{ request.GET.q }}">
+            <button class="btn btn-primary" type="submit">Найти</button>
         </div>
-    </div>
+    </form>
 
     {% if games %}
         <div class="row">
             {% for game in games %}
             <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
                 <div class="game-card h-100">
-                    <img src="{{ game.display_image }}" class="card-img-top" alt="{{ game.title }}" style="height: 180px; object-fit: cover;">
-                    <div class="game-card-body">
-                        <h5 class="game-card-title">{{ game.title }}</h5>
-                        <p class="text-muted small mb-2">{{ game.developer }}</p>
+                    <img src="{{ game.display_image }}" class="card-img-top" alt="{{ game.title }}" style="height: 170px; object-fit: cover;">
+                    <div class="p-3">
+                        <h6 class="mb-1">{{ game.title }}</h6>
+                        <small class="text-muted d-block mb-2">{{ game.developer }}</small>
 
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="game-price fs-5">{{ game.current_price }} ₽</span>
-                            {% if game.discount_percent > 0 %}
-                                <span class="badge bg-success">-{{ game.discount_percent }}%</span>
-                            {% endif %}
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="fw-bold fs-5 text-warning">{{ game.current_price }} ₽</span>
+                                {% if game.discount_percent > 0 %}
+                                    <span class="badge bg-success ms-1">-{{ game.discount_percent }}%</span>
+                                {% endif %}
+                            </div>
+                            <a href="{% url 'shop:game_detail' pk=game.id %}" class="btn btn-sm btn-primary">Подробнее</a>
                         </div>
-
-                        <a href="{% url 'shop:game_detail' pk=game.id %}" class="btn btn-primary w-100">Подробнее</a>
                     </div>
                 </div>
             </div>
             {% endfor %}
         </div>
 
-        <!-- Пагинация -->
         {% if games.has_other_pages %}
-        <nav class="mt-4">
+        <nav>
             <ul class="pagination justify-content-center">
                 {% if games.has_previous %}
                 <li class="page-item"><a class="page-link" href="?page={{ games.previous_page_number }}">&laquo;</a></li>
@@ -66,9 +64,8 @@
 
     {% else %}
         <div class="text-center py-5">
-            <h4 class="text-muted">Игр пока нет</h4>
-            <p class="text-muted">Используйте AI-ассистента (кнопка внизу справа), чтобы добавить игры из RAWG.</p>
-            <a href="{% url 'shop:index' %}" class="btn btn-outline-light mt-3">На главную</a>
+            <h4>Игр не найдено</h4>
+            <p class="text-muted">Нажмите на кнопку AI внизу справа и напишите "добавь Elden Ring" или "добавь популярные игры"</p>
         </div>
     {% endif %}
 </div>
