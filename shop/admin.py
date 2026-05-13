@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Game, GameKey, Cart, Order, OrderGame, Review, BalanceTopUp, Promocode, UserProfile
+from .models import Game, GameKey, Cart, Order, OrderGame, Review, BalanceTopUp, UserProfile
 
 
 @admin.register(Game)
@@ -54,15 +54,9 @@ class BalanceTopUpAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at',)
 
 
-@admin.register(Promocode)
-class PromocodeAdmin(admin.ModelAdmin):
-    list_display = ('code', 'discount_type', 'discount_value', 'is_active', 'created_at')
-    list_filter = ('discount_type', 'is_active', 'created_at')
-    search_fields = ('code',)
-
-
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'balance', 'created_at')
+    list_display = ('user', 'balance', 'role', 'created_at')
     search_fields = ('user__username',)
     readonly_fields = ('created_at', 'updated_at')
+    list_filter = ('role',)
