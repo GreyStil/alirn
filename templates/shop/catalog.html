@@ -1,117 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Каталог - Alirn</title>
+</head>
+<body>
 {% extends 'base.html' %}
-
-{% block title %}Каталог - Alirn{% endblock %}
+{% block title %}Каталог игр{% endblock %}
 
 {% block content %}
 <div class="container">
-    <div class="section-title">Каталог игр</div>
-    
+    <h2 class="section-title">🎮 Каталог игр</h2>
+
     <div class="row">
         <!-- Фильтры -->
         <div class="col-lg-3">
             <div class="filter-panel">
-                <form method="get" class="filter-form">
+                <form method="get">
                     <div class="filter-title">Жанр</div>
-                    <select name="genre" class="form-select" aria-label="Filter by genre">
-                        <option value="">Все жанры</option>
+                    <select name="genre" class="form-select">
+                        <option value=""> Все жанры</option>
                         {% for value, label in genres %}
                             <option value="{{ value }}" {% if selected_genre == value %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>
-                    
-                    <div class="filter-title">Платформа</div>
-                    <select name="platform" class="form-select" aria-label="Filter by platform">
-                        <option value="">Все платформы</option>
-                        {% for value, label in platforms %}
-                            <option value="{{ value }}" {% if selected_platform == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                    
-                    <div class="filter-title">Цена</div>
-                    <div class="row">
-                        <div class="col-6">
-                            <input type="number" name="min_price" class="form-control form-control-sm" placeholder="От" value="{{ min_price }}">
-                        </div>
-                        <div class="col-6">
-                            <input type="number" name="max_price" class="form-control form-control-sm" placeholder="До" value="{{ max_price }}">
-                        </div>
-                    </div>
-                    
-                    <div class="filter-title">Сортировка</div>
-                    <select name="sort" class="form-select" aria-label="Sort games">
-                        <option value="-created_at" {% if sort == '-created_at' %}selected{% endif %}>Новые</option>
-                        <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Цена: возрастание</option>
-                        <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Цена: убывание</option>
-                        <option value="popular" {% if sort == 'popular' %}selected{% endif %}>Популярные</option>
-                        <option value="name" {% if sort == 'name' %}selected{% endif %}>По названию</option>
-                    </select>
-                    
+
                     <button type="submit" class="btn btn-primary w-100 mt-3">Применить</button>
                 </form>
             </div>
         </div>
-        
+
         <!-- Игры -->
         <div class="col-lg-9">
             {% if games %}
-            <div class="row">
-                {% for game in games %}
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="game-card">
-                        {% if game.image %}
-                            <img src="{{ game.image.url }}" alt="{{ game.title }}">
-                        {% else %}
-                            <img src="https://via.placeholder.com/300x200?text={{ game.title }}" alt="{{ game.title }}">
-                        {% endif %}
-                        <div class="game-card-body">
-                            <div class="game-card-title">{{ game.title }}</div>
-                            <p class="text-muted-small">
-                                <span class="badge badge-platform">{{ game.get_platform_display }}</span>
-                            </p>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div>
+                <div class="row">
+                    {% for game in games %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="game-card">
+                            <img src="{{ game.display_image }}" class="card-img-top" alt="{{ game.title }}">
+                            <div class="game-card-body">
+                                <h5 class="game-card-title">{{ game.title }}</h5>
+                                <p class="text-muted small">{{ game.developer }}</p>
+
+                                <div class="d-flex justify-content-between align-items-center">
                                     <span class="game-price">{{ game.current_price }} ₽</span>
                                     {% if game.discount_percent > 0 %}
-                                        <br><span class="old-price">{{ game.price }} ₽</span>
-                                        <span class="game-discount">-{{ game.discount_percent }}%</span>
+                                        <span class="badge bg-success">-{{ game.discount_percent }}%</span>
                                     {% endif %}
                                 </div>
+
+                                <a href="{% url 'shop:game_detail' pk=game.id %}" class="btn btn-primary w-100 mt-2">Подробнее</a>
                             </div>
-                            <a href="{% url 'shop:game_detail' game.id %}" class="btn btn-primary btn-sm w-100">Подробнее</a>
                         </div>
                     </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
-            </div>
-            
-            <!-- Пагинация -->
-            {% if games.has_other_pages %}
-            <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center"><li class="page-item">
-                            <a class="page-link" href="?page=1{% if selected_genre %}&genre={{ selected_genre }}{% endif %}{% if selected_platform %}&platform={{ selected_platform }}{% endif %}{% if min_price %}&min_price={{ min_price }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">Первая</a>
-                        </li>
+
+                <!-- Пагинация -->
+                {% if games.has_other_pages %}
+                <nav>
+                    <ul class="pagination justify-content-center">
+                        {% if games.has_previous %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ games.previous_page_number }}{% if selected_genre %}&genre={{ selected_genre }}{% endif %}{% if selected_platform %}&platform={{ selected_platform }}{% endif %}{% if min_price %}&min_price={{ min_price }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">Назад</a>
+                            <a class="page-link" href="?page={{ games.previous_page_number }}">&laquo;</a>
                         </li>
-{% endif %}
-                    <li class="page-item active">
-                        <span class="page-link">{{ games.number }} / {{ games.paginator.num_pages }}</span>
-                    </li>
-{% if games.has_next %}
-                    <li class="page-item">
-                            <a class="page-link" href="?page={{ games.next_page_number }}{% if selected_genre %}&genre={{ selected_genre }}{% endif %}{% if selected_platform %}&platform={{ selected_platform }}{% endif %}{% if min_price %}&min_price={{ min_price }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">Вперёд</a>
-                        </li>
+                        {% endif %}
+                        <li class="page-item active"><span class="page-link">{{ games.number }}</span></li>
+                        {% if games.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ games.paginator.num_pages }}{% if selected_genre %}&genre={{ selected_genre }}{% endif %}{% if selected_platform %}&platform={{ selected_platform }}{% endif %}{% if min_price %}&min_price={{ min_price }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">Последняя</a>
+                            <a class="page-link" href="?page={{ games.next_page_number }}">&raquo;</a>
                         </li>
-{% endif %}
-                </ul>
-            </nav>
-            {% endif %}
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+
             {% else %}
-            <div class="alert alert-info">Игры не найдены</div>
+                <div class="alert alert-info">Игры не найдены.</div>
             {% endif %}
         </div>
     </div>
 </div>
 {% endblock %}
+</body>
+</html>
