@@ -121,14 +121,11 @@ class LibraryView(LoginRequiredMixin, View):
 
 
 class MyKeysView(LoginRequiredMixin, View):
-    """ Отдельная страница моих ключей """
     template_name = 'accounts/profile_keys.html'
     login_url = 'accounts:login'
     
     def get(self, request):
-        order_games = OrderGame.objects.filter(
-            order__user=request.user
-        ).select_related('game', 'key', 'order').order_by('-order__created_at')
+        order_games = OrderGame.objects.filter(order__user=request.user).select_related('game', 'key', 'order').order_by('-order__created_at')
         
         paginator = Paginator(order_games, 20)
         page = request.GET.get('page', 1)
@@ -215,7 +212,10 @@ class BalanceTopupView(LoginRequiredMixin, View):
     login_url = 'accounts:login'
     
     def get(self, request):
-        return render(request, self.template_name)
+        context = {
+            'quick_amounts': [500, 1000, 1500, 2000, 5000]
+        }
+        return render(request, self.template_name, context)
     
     def post(self, request):
         amount_str = request.POST.get('amount')
