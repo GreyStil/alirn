@@ -1,98 +1,79 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ game.title }} - Alirn</title>
-</head>
-<body>
 {% extends 'base.html' %}
-{% block title %}{{ game.title }}{% endblock %}
+
+{% block title %}{{ game.title }} - Alirn{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container py-4">
     <div class="row">
-        <!-- Left side: Image -->
-        <div class="col-lg-5">
-            <img src="{{ game.display_image }}" class="img-fluid rounded shadow" alt="{{ game.title }}" style="max-height: 420px; width: 100%; object-fit: cover;">
-        </div>
+        <!-- Левая колонка: Обложка и базовая информация -->
+        <div class="col-lg-4">
+            <img src="{{ game.display_image }}" class="img-fluid rounded shadow mb-3" alt="{{ game.title }}">
 
-        <!-- Right side: Info -->
-        <div class="col-lg-7">
-            <h1 class="fw-bold text-white mb-2">{{ game.title }}</h1>
-            <p class="text-muted mb-3">{{ game.developer }} • {{ game.publisher }}</p>
-
-            <div class="d-flex align-items-center gap-3 mb-4">
-                <span class="fs-3 fw-bold" style="color:#acdbf5;">{{ game.current_price }} ₽</span>
-                {% if game.discount_percent > 0 %}
-                    <span class="badge bg-success fs-6">-{{ game.discount_percent }}%</span>
-                    <span class="text-muted text-decoration-line-through">{{ game.price }} ₽</span>
-                {% endif %}
-            </div>
-
-            {% if user.is_authenticated and is_owned %}
-                <div class="alert alert-success">
-                    Эта игра уже в вашей библиотеке
-                </div>
-            {% else %}
-                <form method="post" action="{% url 'shop:add_to_cart' game_id=game.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-primary btn-lg px-5">🛍️ Добавить в корзину</button>
-                </form>
-            {% endif %}
-
-            <div class="mt-4">
-                <h5 class="text-white-50">Описание</h5>
-                <p style="white-space: pre-line; color:#c6d4df;">{{ game.description|default:"Описание отсутствует." }}</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Reviews -->
-    <div class="mt-5">
-        <h4 class="mb-3" style="color:#fff;">Отзывы ({{ reviews.count }})</h4>
-
-        {% if user.is_authenticated and not user_review and is_owned %}
-            <div class="card bg-dark mb-4 p-3">
-                <form method="post" action="{% url 'shop:add_review' game_id=game.id %}">
-                    {% csrf_token %}
-                    <div class="row g-2">
-                        <div class="col-md-2">
-                            <select name="rating" class="form-select">
-                                <option value="5">5 ★</option>
-                                <option value="4">4 ★</option>
-                                <option value="3">3 ★</option>
-                                <option value="2">2 ★</option>
-                                <option value="1">1 ★</option>
-                            </select>
-                        </div>
-                        <div class="col-md-8">
-                            <input type="text" name="text" class="form-control" placeholder="Напишите отзыв...">
-                        </div>
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-outline-light w-100">Отправить</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        {% endif %}
-
-        {% for review in reviews %}
-            <div class="card bg-dark mb-3">
+            <div class="card steam-card mb-3">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <strong>{{ review.user.username }}</strong>
-                        <span class="text-warning">{{ review.rating }} ★</span>
+                    <h5>{{ game.title }}</h5>
+                    <p class="text-muted mb-1">{{ game.developer }}</p>
+                    <p class="mb-2">{{ game.publisher }}</p>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="price-tag fs-4">{{ game.current_price }} ₽</span>
+                        {% if game.discount_percent > 0 %}
+                            <span class="badge bg-success fs-6">-{{ game.discount_percent }}%</span>
+                        {% endif %}
                     </div>
-                    {% if review.text %}
-                        <p class="mt-2 mb-0">{{ review.text }}</p>
+
+                    {% if user.is_authenticated and is_owned %}
+                        <div class="alert alert-success mt-3 py-2">У вас уже есть эта игра</div>
+                    {% else %}
+                        <a href="{% url 'shop:add_to_cart' game_id=game.id %}" class="btn btn-primary w-100 mt-2">
+                            <i class="fas fa-cart-plus me-2"></i> В корзину
+                        </a>
                     {% endif %}
                 </div>
             </div>
-        {% empty %}
-            <p class="text-muted">Пока нет отзывов.</p>
-        {% endfor %}
+        </div>
+
+        <!-- Правая колонка: Информация и табы -->
+        <div class="col-lg-8">
+            {% include 'shop/partials/game_detail_tabs.html' %}
+
+            <!-- Блок достижений игры -->
+            {% if game_achievements %}
+            <div class="card steam-card mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-trophy me-2 text-warning"></i> Достижения этой игры</h5>
+                    {% if user.is_authenticated %}
+                        <span class="badge bg-info">{{ unlocked_count }} / {{ total_achievements }}</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for achievement in game_achievements %}
+                            {% with unlocked=achievement.id in user_achievements_ids %}
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex p-2 rounded {% if unlocked %}bg-success bg-opacity-10{% else %}bg-dark{% endif %}">
+                                    <div class="me-3">
+                                        <i class="fas fa-trophy fa-2x {% if unlocked %}text-warning{% else %}text-muted{% endif %}"></i>
+                                    </div>
+                                    <div>
+                                        <strong>{{ achievement.name }}</strong>
+                                        <p class="small text-muted mb-1">{{ achievement.description }}</p>
+                                        {% if unlocked %}
+                                            <span class="badge bg-success">Получено</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Заблокировано</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endwith %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
     </div>
 </div>
 {% endblock %}
-</body>
-</html>
