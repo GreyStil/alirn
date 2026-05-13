@@ -7,6 +7,8 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 
 from .models import Game, Review, Ticket, TicketReply
+# Импортируем систему достижений
+from shop.utils.achievements import check_and_award_achievements
 
 class IndexView(TemplateView):
     template_name = 'shop/index.html'
@@ -85,6 +87,15 @@ class CheckoutView(LoginRequiredMixin, View):
 
 class OrderCompleteView(LoginRequiredMixin, TemplateView):
     template_name = 'shop/order_complete.html'
+
+    def get(self, request, *args, **kwargs):
+        # Выдаем достижения после успешной покупки
+        if request.user.is_authenticated:
+            new_achievements = check_and_award_achievements(request.user)
+            if new_achievements:
+                for ach in new_achievements:
+                    messages.success(request, f'Получено достижение: {ach.name} (+{ach.points} очков)')
+        return super().get(request, *args, **kwargs)
 
 class SearchView(View):
     template_name = 'shop/search.html'
