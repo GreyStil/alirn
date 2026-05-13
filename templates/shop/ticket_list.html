@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="UTF-8"><title>Мои заявки</title></head>
+<body>
+{% extends 'base.html' %}
+{% block title %}Мои заявки в поддержку{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="section-title">🎫 Мои заявки</h2>
+        <a href="{% url 'shop:create_ticket' %}" class="btn btn-primary">Создать заявку</a>
+    </div>
+
+    {% if tickets %}
+        <div class="list-group">
+            {% for ticket in tickets %}
+            <a href="{% url 'shop:ticket_detail' ticket.id %}" class="list-group-item list-group-item-action bg-dark text-light mb-2">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5>{{ ticket.subject }}</h5>
+                    <small>{{ ticket.created_at|date:"d.m.Y" }}</small>
+                </div>
+                <p class="mb-1">{{ ticket.message|truncatechars:100 }}</p>
+                <span class="badge bg-{% if ticket.status == 'open' %}warning{% elif ticket.status == 'in_progress' %}info{% else %}success{% endif %}">
+                    {{ ticket.get_status_display }}
+                </span>
+            </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-muted">У вас пока нет заявок.</p>
+    {% endif %}
+</div>
+{% endblock %}

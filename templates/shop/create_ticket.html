@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="UTF-8"><title>Создать заявку</title></head>
+<body>
+{% extends 'base.html' %}
+{% block title %}Создать заявку{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:700px;">
+    <h2 class="section-title">📩 Создать заявку в поддержку</h2>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label">Тема</label>
+            <input type="text" name="subject" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Описание проблемы</label>
+            <textarea name="message" class="form-control" rows="6" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Отправить заявку</button>
+        <a href="{% url 'shop:ticket_list' %}" class="btn btn-secondary">Отмена</a>
+    </form>
+</div>
+{% endblock %}
