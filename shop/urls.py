@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .ai_views import AIChatView
 
 app_name = 'shop'
 
@@ -37,4 +38,7 @@ urlpatterns = [
     # Избранное
     path('favorites/add/<int:game_id>/', views.AddFavoriteView.as_view(), name='add_favorite'),
     path('favorites/remove/<int:game_id>/', views.RemoveFavoriteView.as_view(), name='remove_favorite'),
+    
+    # AI Ассистент (RAWG real-time games)
+    path('ai-chat/', AIChatView.as_view(), name='ai_chat'),
 ]
