@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import User
 from .models import Game, GameKey, Cart, Order, OrderGame, Review, BalanceTopUp, UserProfile
 
 
@@ -53,8 +55,32 @@ class BalanceTopUpAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at',)
 
 
+class UserProfileInline(admin.StackedInline):
+    model = UserProfile
+    can_delete = False
+    verbose_name_plural = 'Профиль пользователя'
+    fk_name = 'user'
+    fields = ('balance', 'preferred_currency', 'role', 'avatar')
+    readonly_fields = ('created_at',)  # если есть такое поле
+
+
+class UserAdmin(BaseUserAdmin):
+    inlines = (UserProfileInline,)
+
+
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'balance', 'role')
-    search_fields = ('user__username',)
-    list_filter = ('role',)
+    list_display = ('user', 'balance', 'preferred_currency', 'role', 'created_at')
+    list_filter = ('role', 'preferred_currency')
+    search_fields = ('user__username', 'user__email')
+    readonly_fields = ('created_at',)
+    fieldsets = (
+        (None, {'fields': ('user',)}),
+        ('Финансы и настройки', {'fields': ('balance', 'preferred_currency')}),
+        ('Роль и аватар', {'fields': ('role', 'avatar')}),
+    )
+
+
+# Перерегистрируем стандартную модель User с нашим Inline
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)
