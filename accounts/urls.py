@@ -1,1 +1,1 @@
-    path('community/', views.CommunityView.as_view(), name='community'),
+    path('profile/favorites/remove/<int:game_id>/', views.RemoveFromFavoritesView.as_view(), name='remove_from_favorites'),
