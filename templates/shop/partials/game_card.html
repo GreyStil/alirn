@@ -1,0 +1,20 @@
+<div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+    <a href="{% url 'shop:game_detail' pk=game.id %}" class="text-decoration-none">
+        <div class="game-card h-100">
+            <img src="{{ game.display_image|default:'https://picsum.photos/id/1015/300/200' }}" class="w-100" style="height: 180px; object-fit: cover;" alt="{{ game.title }}">
+            <div class="p-3">
+                <div class="fw-semibold text-white mb-1" style="font-size: 1rem; line-height: 1.3;">{{ game.title }}</div>
+                <small class="text-muted d-block mb-2">{{ game.developer|default:'Неизвестный разработчик' }}</small>
+
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <div>
+                        <span class="price">{{ game.current_price }} ₽</span>
+                        {% if game.discount_percent > 0 %}
+                            <span class="badge bg-success ms-2">-{{ game.discount_percent }}%</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </a>
+</div>
