@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Достижения - Alirn{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-trophy text-warning me-2"></i> Достижения</h2>
+            <p class="text-muted mb-0">Разблокировано {{ unlocked_count }} из {{ total_count }}</p>
+        </div>
+        <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i> Назад в профиль
+        </a>
+    </div>
+
+    <!-- Статистика -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card steam-card text-center p-3">
+                <h3 class="text-success mb-0">{{ unlocked_count }}</h3>
+                <small class="text-muted">Получено</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card steam-card text-center p-3">
+                <h3 class="text-info mb-0">{{ total_count }}</h3>
+                <small class="text-muted">Всего достижений</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card steam-card text-center p-3">
+                <h3 class="text-warning mb-0">{{ user.profile.achievements.count|default:0 }}</h3>
+                <small class="text-muted">Очков заработано</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Список достижений -->
+    <div class="row">
+        {% for achievement in all_achievements %}
+            {% with user_has=achievement in user.achievements.all.values_list 'achievement' flat=True %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card steam-card h-100 {% if not user_has %}opacity-75{% endif %}" 
+                     style="border-left: 5px solid {% if achievement.rarity == 'legendary' %}#ff9f1c{% elif achievement.rarity == 'epic' %}#9b59b6{% elif achievement.rarity == 'rare' %}#3498db{% else %}#95a5a6{% endif %};">
+                    <div class="card-body d-flex">
+                        <div class="me-3">
+                            {% if achievement.icon %}
+                                <img src="{{ achievement.icon.url }}" width="64" height="64" style="object-fit: contain;">
+                            {% else %}
+                                <i class="fas fa-trophy fa-3x {% if user_has %}text-warning{% else %}text-muted{% endif %}"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="card-title mb-1">{{ achievement.name }}</h6>
+                                <span class="badge 
+                                    {% if achievement.rarity == 'legendary' %}bg-warning text-dark
+                                    {% elif achievement.rarity == 'epic' %}bg-purple
+                                    {% elif achievement.rarity == 'rare' %}bg-info
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ achievement.get_rarity_display }}
+                                </span>
+                            </div>
+                            <p class="card-text small text-muted mb-2">{{ achievement.description }}</p>
+                            
+                            {% if user_has %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i> Получено
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">Заблокировано</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endwith %}
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">Пока нет созданных достижений.</div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
