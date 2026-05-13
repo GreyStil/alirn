@@ -12,15 +12,14 @@ class GameAdmin(admin.ModelAdmin):
 
 @admin.register(GameKey)
 class GameKeyAdmin(admin.ModelAdmin):
-    list_display = ('game', 'key', 'is_used', 'created_at')
-    list_filter = ('game', 'is_used', 'created_at')
+    list_display = ('game', 'key', 'is_used')
+    list_filter = ('game', 'is_used')
     search_fields = ('game__title', 'key')
-    readonly_fields = ('created_at',)
 
 
 @admin.register(Cart)
 class CartAdmin(admin.ModelAdmin):
-    list_display = ('user', 'get_items_count', 'created_at')
+    list_display = ('user',)
     search_fields = ('user__username',)
 
 
@@ -29,7 +28,7 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'total_price', 'status', 'created_at')
     list_filter = ('status', 'created_at')
     search_fields = ('user__username',)
-    readonly_fields = ('created_at', 'updated_at')
+    readonly_fields = ('created_at',)
 
 
 @admin.register(OrderGame)
@@ -43,20 +42,19 @@ class ReviewAdmin(admin.ModelAdmin):
     list_display = ('game', 'user', 'rating', 'created_at')
     list_filter = ('rating', 'created_at', 'game')
     search_fields = ('game__title', 'user__username')
-    readonly_fields = ('created_at', 'updated_at')
+    readonly_fields = ('created_at',)
 
 
 @admin.register(BalanceTopUp)
 class BalanceTopUpAdmin(admin.ModelAdmin):
-    list_display = ('user', 'amount', 'success', 'created_at')
-    list_filter = ('success', 'created_at')
+    list_display = ('user', 'amount', 'created_at')
+    list_filter = ('created_at',)
     search_fields = ('user__username',)
     readonly_fields = ('created_at',)
 
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'balance', 'role', 'created_at')
+    list_display = ('user', 'balance', 'role')
     search_fields = ('user__username',)
-    readonly_fields = ('created_at', 'updated_at')
     list_filter = ('role',)

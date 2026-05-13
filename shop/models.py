@@ -109,8 +109,8 @@ class UserProfile(models.Model):
     preferred_currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='USD')
     role = models.CharField(max_length=20, choices=USER_ROLES, default='user')
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
-    favorites = models.ManyToManyField(Game, blank=True)
-    owned_games = models.ManyToManyField(Game, blank=True)
+    favorites = models.ManyToManyField(Game, related_name='favorited_by', blank=True)
+    owned_games = models.ManyToManyField(Game, related_name='owned_by', blank=True)
 
     def __str__(self): return f"{self.user.username} ({self.role})"
 
