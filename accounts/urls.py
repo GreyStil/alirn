@@ -28,6 +28,7 @@ urlpatterns = [
     path('profile/', views.ProfileView.as_view(), name='profile'),
     path('profile/orders/', views.OrderListView.as_view(), name='profile_orders'),
     path('profile/library/', views.LibraryView.as_view(), name='profile_library'),
+    path('profile/keys/', views.MyKeysView.as_view(), name='profile_keys'),
     path('profile/favorites/', views.FavoritesView.as_view(), name='profile_favorites'),
     path('profile/settings/', views.SettingsView.as_view(), name='profile_settings'),
     path('profile/balance/', views.BalanceView.as_view(), name='profile_balance'),

@@ -14,53 +14,37 @@ from .models import Game, GameKey, Cart, Order, OrderGame, Review, GENRE_CHOICES
 
 
 class IndexView(TemplateView):
-    """Главная страница"""
     template_name = 'shop/index.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
-        # Новинки и акции
         context['featured_games'] = Game.objects.filter(discount_percent__gt=0)[:5]
-        
-        # Популярные игры
-        context['popular_games'] = Game.objects.annotate(
-            review_count=Count('reviews')
-        ).order_by('-sales_count')[:6]
-        
-        # Случайные рекомендации
+        context['popular_games'] = Game.objects.annotate(review_count=Count('reviews')).order_by('-sales_count')[:6]
         context['recommended_games'] = Game.objects.all().order_by('?')[:6]
-        
         return context
 
 
 class CatalogView(View):
-    """Каталог игр с фильтрацией"""
     template_name = 'shop/catalog.html'
     
     def get(self, request):
         games = Game.objects.all()
         
-        # Фильтрация по жанру
         genre = request.GET.get('genre', '')
         if genre:
             games = games.filter(genre=genre)
         
-        # Фильтрация по платформе
         platform = request.GET.get('platform', '')
         if platform:
             games = games.filter(platform=platform)
         
-        # Фильтрация по цене
         min_price = request.GET.get('min_price', '')
         max_price = request.GET.get('max_price', '')
-        
         if min_price:
             games = games.filter(price__gte=Decimal(min_price))
         if max_price:
             games = games.filter(price__lte=Decimal(max_price))
         
-        # Сортировка
         sort = request.GET.get('sort', '-created_at')
         if sort == 'price_asc':
             games = games.order_by('price')
@@ -73,7 +57,6 @@ class CatalogView(View):
         else:
             games = games.order_by(sort)
         
-        # Пагинация
         paginator = Paginator(games, 12)
         page = request.GET.get('page', 1)
         games_page = paginator.get_page(page)
@@ -88,12 +71,10 @@ class CatalogView(View):
             'max_price': max_price,
             'sort': sort,
         }
-        
         return render(request, self.template_name, context)
 
 
 class GameDetailView(DetailView):
-    """Детальная страница игры"""
     model = Game
     template_name = 'shop/game_detail.html'
     context_object_name = 'game'
@@ -102,11 +83,9 @@ class GameDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         game = self.object
         
-        # Увеличиваем счётчик просмотров
         game.views_count += 1
         game.save(update_fields=['views_count'])
         
-        # Отзывы
         context['reviews'] = game.reviews.all()
         context['average_rating'] = game.average_rating
         context['user_review'] = None
@@ -125,7 +104,6 @@ class GameDetailView(DetailView):
 
 
 class CartView(View):
-    """Просмотр корзины"""
     template_name = 'shop/cart.html'
     
     def get(self, request):
@@ -142,16 +120,20 @@ class CartView(View):
             'total_price': sum(game.current_price for game in games) if games else 0,
             'items_count': len(games) if games else 0,
         }
-        
         return render(request, self.template_name, context)
 
 
 class AddToCartView(LoginRequiredMixin, View):
-    """Добавление игры в корзину"""
     login_url = 'accounts:login'
     
     def post(self, request, game_id):
         game = get_object_or_404(Game, id=game_id)
+        
+        # Проверка: уже в библиотеке?
+        if request.user.profile.owned_games.filter(id=game_id).exists():
+            messages.warning(request, f'У вас уже есть "{game.title}" в библиотеке')
+            return redirect('shop:game_detail', pk=game_id)
+        
         cart = request.user.cart
         
         if cart.games.filter(id=game_id).exists():
@@ -164,21 +146,17 @@ class AddToCartView(LoginRequiredMixin, View):
 
 
 class RemoveFromCartView(LoginRequiredMixin, View):
-    """Удаление игры из корзины"""
     login_url = 'accounts:login'
     
     def post(self, request, game_id):
         cart = request.user.cart
         game = get_object_or_404(Game, id=game_id)
-        
         cart.games.remove(game)
         messages.success(request, f'{game.title} удалена из корзины')
-        
         return redirect('shop:cart')
 
 
 class CheckoutView(LoginRequiredMixin, View):
-    """Оформление заказа"""
     template_name = 'shop/checkout.html'
     login_url = 'accounts:login'
     
@@ -198,7 +176,6 @@ class CheckoutView(LoginRequiredMixin, View):
             'balance': balance,
             'insufficient_balance': balance < total_price,
         }
-        
         return render(request, self.template_name, context)
     
     def post(self, request):
@@ -215,33 +192,26 @@ class CheckoutView(LoginRequiredMixin, View):
             messages.error(request, 'Недостаточно средств')
             return redirect('shop:checkout')
         
-        # Использование транзакции для безопасности
         with transaction.atomic():
-            # Списываем средства
             user_profile.balance -= total_price
             user_profile.save()
             
-            # Создаём заказ
             order = Order.objects.create(
                 user=request.user,
                 total_price=total_price,
                 status='paid'
             )
             
-            # Для каждой игры резервируем ключ
             for game in games:
-                # Ищем первый неиспользованный ключ
                 key = game.keys.filter(is_used=False).first()
                 
                 if not key:
                     messages.error(request, f'Нет доступных ключей для {game.title}')
                     return redirect('shop:checkout')
                 
-                # Помечаем ключ как использованный
                 key.is_used = True
                 key.save()
                 
-                # Создаём связь заказ-игра
                 OrderGame.objects.create(
                     order=order,
                     game=game,
@@ -249,14 +219,10 @@ class CheckoutView(LoginRequiredMixin, View):
                     price_at_purchase=game.current_price
                 )
                 
-                # Увеличиваем счётчик продаж
                 game.sales_count += 1
                 game.save(update_fields=['sales_count'])
-                
-                # Добавляем в библиотеку пользователя
                 user_profile.owned_games.add(game)
             
-            # Очищаем корзину
             cart.games.clear()
         
         messages.success(request, 'Заказ успешно оформлен!')
@@ -264,7 +230,6 @@ class CheckoutView(LoginRequiredMixin, View):
 
 
 class OrderCompleteView(LoginRequiredMixin, TemplateView):
-    """Страница успешного завершения заказа"""
     template_name = 'shop/order_complete.html'
     login_url = 'accounts:login'
     
@@ -281,23 +246,17 @@ class OrderCompleteView(LoginRequiredMixin, TemplateView):
 
 
 class OrderDetailView(LoginRequiredMixin, View):
-    """Детали заказа"""
     template_name = 'shop/order_detail.html'
     
     def get(self, request, pk):
         order = get_object_or_404(Order, id=pk, user=request.user)
         order_games = order.order_games.all()
         
-        context = {
-            'order': order,
-            'order_games': order_games,
-        }
-        
+        context = {'order': order, 'order_games': order_games}
         return render(request, self.template_name, context)
 
 
 class PaymentEmulateView(LoginRequiredMixin, View):
-    """Эмуляция обработки платежа"""
     template_name = 'shop/payment_emulate.html'
     login_url = 'accounts:login'
     
@@ -315,41 +274,32 @@ class PaymentEmulateView(LoginRequiredMixin, View):
         try:
             amount = Decimal(amount_str)
             
-            # Пополняем баланс
             with transaction.atomic():
                 profile = request.user.profile
                 profile.balance += amount
                 profile.save()
                 
-                # Создаём запись о пополнении
                 from .models import BalanceTopUp
-                BalanceTopUp.objects.create(
-                    user=request.user,
-                    amount=amount,
-                    success=True
-                )
+                BalanceTopUp.objects.create(user=request.user, amount=amount, success=True)
             
-            # Очищаем сессию
-            del request.session['topup_amount']
+            if 'topup_amount' in request.session:
+                del request.session['topup_amount']
             if 'topup_user_id' in request.session:
                 del request.session['topup_user_id']
             
             messages.success(request, f'Баланс пополнен на {amount} ₽')
             return redirect('accounts:profile_balance')
-        
         except Exception as e:
             messages.error(request, f'Ошибка при пополнении баланса: {str(e)}')
             return redirect('accounts:balance_topup')
 
 
 class AddReviewView(LoginRequiredMixin, View):
-    """Добавление отзыва"""
     login_url = 'accounts:login'
     
     def post(self, request, game_id):
         game = get_object_or_404(Game, id=game_id)
         
-        # Проверяем, что пользователь купил игру
         if not request.user.profile.owned_games.filter(id=game_id).exists():
             messages.error(request, 'Вы не можете оставить отзыв на игру, которую не купили')
             return redirect('shop:game_detail', pk=game_id)
@@ -360,50 +310,37 @@ class AddReviewView(LoginRequiredMixin, View):
         review, created = Review.objects.update_or_create(
             game=game,
             user=request.user,
-            defaults={
-                'rating': rating,
-                'text': text,
-            }
+            defaults={'rating': rating, 'text': text}
         )
         
-        if created:
-            messages.success(request, 'Отзыв добавлен')
-        else:
-            messages.success(request, 'Отзыв обновлён')
-        
+        messages.success(request, 'Отзыв добавлен' if created else 'Отзыв обновлён')
         return redirect('shop:game_detail', pk=game_id)
 
 
 class EditReviewView(LoginRequiredMixin, View):
-    """Редактирование отзыва"""
     login_url = 'accounts:login'
     
     def post(self, request, game_id, review_id):
         review = get_object_or_404(Review, id=review_id, user=request.user, game_id=game_id)
-        
         review.rating = int(request.POST.get('rating', review.rating))
         review.text = request.POST.get('text', review.text)
         review.save()
-        
         messages.success(request, 'Отзыв обновлён')
         return redirect('shop:game_detail', pk=game_id)
 
 
 class DeleteReviewView(LoginRequiredMixin, View):
-    """Удаление отзыва"""
     login_url = 'accounts:login'
     
     def post(self, request, review_id):
         review = get_object_or_404(Review, id=review_id, user=request.user)
         game_id = review.game.id
         review.delete()
-        
         messages.success(request, 'Отзыв удалён')
         return redirect('shop:game_detail', pk=game_id)
 
 
 class SearchView(View):
-    """Поиск игр"""
     template_name = 'shop/search.html'
     
     def get(self, request):
@@ -422,37 +359,27 @@ class SearchView(View):
         page = request.GET.get('page', 1)
         games_page = paginator.get_page(page)
         
-        context = {
-            'query': query,
-            'games': games_page,
-        }
-        
+        context = {'query': query, 'games': games_page}
         return render(request, self.template_name, context)
 
 
 class AddFavoriteView(LoginRequiredMixin, View):
-    """Добавление в избранное"""
     login_url = 'accounts:login'
     
     def post(self, request, game_id):
         game = get_object_or_404(Game, id=game_id)
         profile = request.user.profile
-        
         profile.favorites.add(game)
         messages.success(request, f'{game.title} добавлена в избранное')
-        
         return redirect('shop:game_detail', pk=game_id)
 
 
 class RemoveFavoriteView(LoginRequiredMixin, View):
-    """Удаление из избранного"""
     login_url = 'accounts:login'
     
     def post(self, request, game_id):
         profile = request.user.profile
         game = get_object_or_404(Game, id=game_id)
-        
         profile.favorites.remove(game)
         messages.success(request, f'{game.title} удалена из избранного')
-        
         return redirect('shop:game_detail', pk=game_id)

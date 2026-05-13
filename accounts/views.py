@@ -9,7 +9,7 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from decimal import Decimal
 
-from shop.models import UserProfile, Cart, Order, BalanceTopUp, OrderGame
+from shop.models import UserProfile, Cart, Order, BalanceTopUp, OrderGame, Game
 
 
 class LoginView(View):
@@ -104,29 +104,37 @@ class OrderListView(LoginRequiredMixin, View):
 
 
 class LibraryView(LoginRequiredMixin, View):
-    """ Библиотека игр с ключами """
     template_name = 'accounts/profile_library.html'
     login_url = 'accounts:login'
     
     def get(self, request):
         games = request.user.profile.owned_games.all()
-        
-        # Get keys for owned games
-        order_games = OrderGame.objects.filter(
-            order__user=request.user,
-            game__in=games
-        ).select_related('game', 'key')
-        
+        order_games = OrderGame.objects.filter(order__user=request.user, game__in=games).select_related('game', 'key')
         game_keys = {og.game.id: og.key.key for og in order_games}
         
         paginator = Paginator(games, 12)
         page = request.GET.get('page', 1)
         games_page = paginator.get_page(page)
         
-        context = {
-            'games': games_page,
-            'game_keys': game_keys,
-        }
+        context = {'games': games_page, 'game_keys': game_keys}
+        return render(request, self.template_name, context)
+
+
+class MyKeysView(LoginRequiredMixin, View):
+    """ Отдельная страница моих ключей """
+    template_name = 'accounts/profile_keys.html'
+    login_url = 'accounts:login'
+    
+    def get(self, request):
+        order_games = OrderGame.objects.filter(
+            order__user=request.user
+        ).select_related('game', 'key', 'order').order_by('-order__created_at')
+        
+        paginator = Paginator(order_games, 20)
+        page = request.GET.get('page', 1)
+        keys_page = paginator.get_page(page)
+        
+        context = {'order_games': keys_page}
         return render(request, self.template_name, context)
 
 
@@ -198,10 +206,7 @@ class BalanceView(LoginRequiredMixin, View):
         page = request.GET.get('page', 1)
         topups_page = paginator.get_page(page)
         
-        context = {
-            'balance': profile.balance,
-            'topups': topups_page,
-        }
+        context = {'balance': profile.balance, 'topups': topups_page}
         return render(request, self.template_name, context)
 
 
