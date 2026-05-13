@@ -14,14 +14,16 @@ PLATFORM_CHOICES = [
     ('gog', 'GOG'), ('uplay', 'Uplay'),
 ]
 
-CURRENCY_CHOICES = [
-    ('USD', 'USD $'),
-    ('EUR', 'EUR €'),
+CURRENCY_CHOICES = [('USD', 'USD $'), ('EUR', 'EUR €')]
+
+USER_ROLES = [
+    ('user', 'User'),
+    ('moderator', 'Moderator'),
+    ('support', 'Support'),
+    ('admin', 'Admin'),
 ]
 
-ORDER_STATUS_CHOICES = [
-    ('pending', 'Pending'), ('paid', 'Paid'), ('completed', 'Completed'), ('cancelled', 'Cancelled'),
-]
+ORDER_STATUS_CHOICES = [('pending', 'Pending'), ('paid', 'Paid'), ('completed', 'Completed'), ('cancelled', 'Cancelled')]
 
 
 class Game(models.Model):
@@ -35,8 +37,8 @@ class Game(models.Model):
     region = models.CharField(max_length=100, default='Global')
     system_requirements = models.TextField(blank=True, null=True)
     
-    price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
-    discount_percent = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    discount_percent = models.IntegerField(default=0)
     
     image = models.ImageField(upload_to='games/', blank=True, null=True)
     image_url = models.URLField(max_length=500, blank=True, null=True)
@@ -44,7 +46,6 @@ class Game(models.Model):
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
     views_count = models.IntegerField(default=0)
     sales_count = models.IntegerField(default=0)
     
@@ -73,10 +74,8 @@ class Game(models.Model):
     
     @property
     def display_image(self):
-        if self.image:
-            return self.image.url
-        elif self.image_url:
-            return self.image_url
+        if self.image: return self.image.url
+        elif self.image_url: return self.image_url
         return 'https://via.placeholder.com/300x200?text=No+Image'
 
 
@@ -86,11 +85,8 @@ class GameKey(models.Model):
     is_used = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     
-    class Meta:
-        verbose_name_plural = 'Game Keys'
-    
     def __str__(self):
-        return f'{self.game.title} - {self.key[:10]}...'
+        return f'{self.game.title} - {self.key[:8]}...'
 
 
 class Cart(models.Model):
@@ -101,29 +97,17 @@ class Cart(models.Model):
     
     def __str__(self):
         return f'Cart of {self.user.username}'
-    
-    @property
-    def total_price(self):
-        return sum(game.current_price for game in self.games.all())
-    
-    def get_items_count(self):
-        return self.games.count()
 
 
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
-    games = models.ManyToManyField(Game, through='OrderGame')
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='paid')
     currency = models.CharField(max_length=3, default='USD')
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        ordering = ['-created_at']
     
     def __str__(self):
-        return f'Order #{self.id} - {self.user.username}'
+        return f'Order #{self.id}'
 
 
 class OrderGame(models.Model):
@@ -133,41 +117,32 @@ class OrderGame(models.Model):
     price_at_purchase = models.DecimalField(max_digits=10, decimal_places=2)
     
     def __str__(self):
-        return f'{self.order} - {self.game.title}'
+        return f'{self.game.title}'
 
 
 class Review(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name='reviews')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
-    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    rating = models.IntegerField()
     text = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
         unique_together = ('game', 'user')
         ordering = ['-created_at']
-    
-    def __str__(self):
-        return f'{self.user.username} - {self.game.title} ({self.rating}★)'
 
 
 class BalanceTopUp(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='balance_topups')
-    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
     success = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         ordering = ['-created_at']
-        verbose_name_plural = 'Balance TopUps'
-    
-    def __str__(self):
-        return f'{self.user.username} - {self.amount}'
 
 
 class Notification(models.Model):
-    """Simple in-app notifications"""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     title = models.CharField(max_length=200)
     message = models.TextField()
@@ -176,31 +151,26 @@ class Notification(models.Model):
     
     class Meta:
         ordering = ['-created_at']
-    
-    
-class Promocode(models.Model):
-    code = models.CharField(max_length=50, unique=True)
-    discount_type = models.CharField(max_length=20, choices=[('percent', 'Percent'), ('fixed', 'Fixed')])
-    discount_value = models.DecimalField(max_digits=10, decimal_places=2)
-    max_usage = models.IntegerField(null=True, blank=True)
-    current_usage = models.IntegerField(default=0)
-    expiry_date = models.DateTimeField(null=True, blank=True)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    def __str__(self):
-        return self.code
 
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     preferred_currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='USD')
-    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True, default='avatars/default.png')
+    role = models.CharField(max_length=20, choices=USER_ROLES, default='user')
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     favorites = models.ManyToManyField(Game, related_name='favorited_by', blank=True)
     owned_games = models.ManyToManyField(Game, related_name='owned_by', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return self.user.username
+        return f'{self.user.username} ({self.role})'
+    
+    @property
+    def is_moderator(self):
+        return self.role in ['moderator', 'admin', 'support']
+    
+    @property
+    def is_support(self):
+        return self.role in ['support', 'admin']

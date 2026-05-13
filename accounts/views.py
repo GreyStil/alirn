@@ -28,9 +28,8 @@ class LoginView(View):
             login(request, user)
             messages.success(request, f'Добро пожаловать, {user.username}!')
             return redirect(request.GET.get('next', 'shop:index'))
-        else:
-            messages.error(request, 'Неверное имя пользователя или пароль')
-            return render(request, self.template_name)
+        messages.error(request, 'Неверное имя пользователя или пароль')
+        return render(request, self.template_name)
 
 
 class RegisterView(View):
@@ -45,7 +44,7 @@ class RegisterView(View):
         password = request.POST.get('password')
         password_confirm = request.POST.get('password_confirm')
         
-        if not username or not email or not password:
+        if not all([username, email, password]):
             messages.error(request, 'Все поля обязательны')
             return render(request, self.template_name)
         if password != password_confirm:
@@ -78,6 +77,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         context['favorites_count'] = user.profile.favorites.count()
         context['balance'] = user.profile.balance
         context['unread_notifications'] = user.notifications.filter(is_read=False).count()
+        context['user_role'] = user.profile.role
         return context
 
 
@@ -90,8 +90,7 @@ class OrderListView(LoginRequiredMixin, View):
         paginator = Paginator(orders, 10)
         page = request.GET.get('page', 1)
         orders_page = paginator.get_page(page)
-        context = {'orders': orders_page}
-        return render(request, self.template_name, context)
+        return render(request, self.template_name, {'orders': orders_page})
 
 
 class LibraryView(LoginRequiredMixin, View):
@@ -105,8 +104,7 @@ class LibraryView(LoginRequiredMixin, View):
         paginator = Paginator(games, 12)
         page = request.GET.get('page', 1)
         games_page = paginator.get_page(page)
-        context = {'games': games_page, 'game_keys': game_keys}
-        return render(request, self.template_name, context)
+        return render(request, self.template_name, {'games': games_page, 'game_keys': game_keys})
 
 
 class MyKeysView(LoginRequiredMixin, View):
@@ -118,8 +116,7 @@ class MyKeysView(LoginRequiredMixin, View):
         paginator = Paginator(order_games, 20)
         page = request.GET.get('page', 1)
         keys_page = paginator.get_page(page)
-        context = {'order_games': keys_page}
-        return render(request, self.template_name, context)
+        return render(request, self.template_name, {'order_games': keys_page})
 
 
 class ExportKeysView(LoginRequiredMixin, View):
@@ -127,19 +124,12 @@ class ExportKeysView(LoginRequiredMixin, View):
     
     def get(self, request):
         order_games = OrderGame.objects.filter(order__user=request.user).select_related('game', 'key')
-        
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="my_keys.csv"'
-        
         writer = csv.writer(response)
         writer.writerow(['Game', 'Key', 'Purchase Date'])
-        
         for og in order_games:
-            writer.writerow([
-                og.game.title,
-                og.key.key,
-                og.order.created_at.strftime('%Y-%m-%d %H:%M')
-            ])
+            writer.writerow([og.game.title, og.key.key, og.order.created_at.strftime('%Y-%m-%d %H:%M')])
         return response
 
 
@@ -152,8 +142,7 @@ class FavoritesView(LoginRequiredMixin, View):
         paginator = Paginator(games, 12)
         page = request.GET.get('page', 1)
         games_page = paginator.get_page(page)
-        context = {'games': games_page}
-        return render(request, self.template_name, context)
+        return render(request, self.template_name, {'games': games_page})
 
 
 class SettingsView(LoginRequiredMixin, View):
@@ -161,16 +150,12 @@ class SettingsView(LoginRequiredMixin, View):
     login_url = 'accounts:login'
     
     def get(self, request):
-        context = {
-            'current_currency': request.user.profile.preferred_currency
-        }
-        return render(request, self.template_name, context)
+        return render(request, self.template_name, {'current_currency': request.user.profile.preferred_currency})
     
     def post(self, request):
         user = request.user
         profile = user.profile
         
-        # Currency change
         if 'currency' in request.POST:
             new_currency = request.POST.get('currency')
             if new_currency in ['USD', 'EUR']:
@@ -179,15 +164,15 @@ class SettingsView(LoginRequiredMixin, View):
                 messages.success(request, f'Валюта изменена на {new_currency}')
         
         if 'new_password' in request.POST:
-            old_password = request.POST.get('old_password')
-            new_password = request.POST.get('new_password')
-            new_password_confirm = request.POST.get('new_password_confirm')
-            if not user.check_password(old_password):
+            old = request.POST.get('old_password')
+            new = request.POST.get('new_password')
+            confirm = request.POST.get('new_password_confirm')
+            if not user.check_password(old):
                 messages.error(request, 'Неверный текущий пароль')
-            elif new_password != new_password_confirm:
+            elif new != confirm:
                 messages.error(request, 'Новые пароли не совпадают')
             else:
-                user.set_password(new_password)
+                user.set_password(new)
                 user.save()
                 messages.success(request, 'Пароль изменён')
         
@@ -218,8 +203,7 @@ class BalanceView(LoginRequiredMixin, View):
         paginator = Paginator(topups, 15)
         page = request.GET.get('page', 1)
         topups_page = paginator.get_page(page)
-        context = {'balance': profile.balance, 'topups': topups_page}
-        return render(request, self.template_name, context)
+        return render(request, self.template_name, {'balance': profile.balance, 'topups': topups_page})
 
 
 class BalanceTopupView(LoginRequiredMixin, View):
@@ -227,18 +211,15 @@ class BalanceTopupView(LoginRequiredMixin, View):
     login_url = 'accounts:login'
     
     def get(self, request):
-        context = {'quick_amounts': [500, 1000, 1500, 2000, 5000]}
-        return render(request, self.template_name, context)
+        return render(request, self.template_name, {'quick_amounts': [500, 1000, 1500, 2000, 5000]})
     
     def post(self, request):
-        amount_str = request.POST.get('amount')
         try:
-            amount = Decimal(amount_str)
-            if amount <= 0:
-                messages.error(request, 'Сумма должна быть больше нуля')
-                return render(request, self.template_name)
-            request.session['topup_amount'] = str(amount)
-            return redirect('shop:payment_emulate')
+            amount = Decimal(request.POST.get('amount'))
+            if amount > 0:
+                request.session['topup_amount'] = str(amount)
+                return redirect('shop:payment_emulate')
+            messages.error(request, 'Сумма должна быть больше нуля')
         except:
             messages.error(request, 'Неверная сумма')
-            return render(request, self.template_name)
+        return render(request, self.template_name)

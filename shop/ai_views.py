@@ -20,47 +20,47 @@ class AIChatView(View):
             if not msg:
                 return JsonResponse({'reply': 'Напиши что-нибудь!'})
             
-            # === SMART COMMAND PARSING ===
-            if any(w in msg for w in ['добавь', 'add', 'найди', 'search', 'покажи']):
+            # === SUPPORT MODE ===
+            support_keywords = ['не работает', 'ошибка', 'не приходит', 'не приходят', 'проблема', 'не получил', 'ключ не', 'не работает', 'баг', 'не загружается']
+            
+            if any(word in msg for word in support_keywords):
+                support_replies = [
+                    'Понял вашу проблему. Пожалуйста, опишите её подробнее и я попробую помочь. Можете указать номер заказа?',
+                    'Я техническая поддержка Alirn. Расскажите, что именно происошло? Я постараюсь решить вопрос.',
+                    'Давайте разберёмся. Какая именно ошибка возникает? Попробуйте обновить страницу и попробуйте снова.',
+                    'Я помогу вам с этим. Пожалуйста, напишите номер заказа или название игры.'
+                ]
+                return JsonResponse({'reply': random.choice(support_replies)})
+            
+            # === ADD GAME ===
+            if any(w in msg for w in ['добавь', 'add', 'найди']):
                 query = msg
-                for w in ['добавь', 'add', 'найди', 'search', 'покажи', 'игру', 'game', 'игр']:
+                for w in ['добавь', 'add', 'найди', 'игру', 'game']:
                     query = query.replace(w, '').strip()
                 if not query: query = 'cyberpunk 2077'
                 
-                result = search_games(query, page_size=6)
+                result = search_games(query, page_size=5)
                 if result.get('error'):
-                    return JsonResponse({'reply': f"Ошибка RAWG: {result['error']}. Проверь RAWG_API_KEY."})
-                
-                games = result.get('results', [])
-                if not games:
-                    return JsonResponse({'reply': f'Игры по "{query}" не найдены.'})
+                    return JsonResponse({'reply': f"Ошибка: {result['error']}"})
                 
                 added = []
-                for g in games[:4]:
+                for g in result.get('results', [])[:3]:
                     game, created = add_game_from_rawg(g)
-                    if created:
-                        added.append(game.title)
+                    if created: added.append(game.title)
                 
                 if added:
-                    return JsonResponse({'reply': f'✅ Добавил в каталог: <b>{", ".join(added)}</b>. Они уже в магазине!'})
-                else:
-                    return JsonResponse({'reply': 'Игры уже есть в каталоге или не удалось добавить.'})
+                    return JsonResponse({'reply': f'✅ Добавил: {", ".join(added)}'})
+                return JsonResponse({'reply': 'Игры уже есть или не удалось добавить.'})
             
-            elif any(w in msg for w in ['покажи', 'list', 'каталог', 'popular', 'популярн']):
+            # === POPULAR / RECOMMEND ===
+            elif any(w in msg for w in ['покажи', 'popular', 'популярн', 'рекоменд']):
                 popular = Game.objects.order_by('-sales_count')[:5]
-                titles = [g.title for g in popular]
-                return JsonResponse({'reply': f'Топ по продажам: <b>{", ".join(titles)}</b>'})
-            
-            elif 'рекоменд' in msg or 'recommend' in msg:
-                recs = Game.objects.order_by('?')[:4]
-                return JsonResponse({'reply': 'Рекомендую: ' + ', '.join([g.title for g in recs])})
+                return JsonResponse({'reply': 'Топ игр: ' + ', '.join([g.title for g in popular])})
             
             else:
                 replies = [
-                    'Я могу добавлять реальные игры из RAWG! Пробуй "добавь Elden Ring"',
-                    'Хочешь топ игр? Напиши "покажи популярные"',
-                    'Я подключён к RAWG API. Давай добавим что-нибудь крутое!',
-                    'Попробуй команды: "добавь новинки", "рекомендуй", "покажи топ"'
+                    'Привет! Я могу добавлять реальные игры и помогать с проблемами. Пробуй "добавь Elden Ring" или напиши о проблеме.',
+                    'Я тех. поддержка и каталог. Чем могу помочь?',
                 ]
                 return JsonResponse({'reply': random.choice(replies)})
         except Exception as e:
