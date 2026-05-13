@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Сообщество - Alirn{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-users text-info me-2"></i> Сообщество</h2>
+    </div>
+
+    <div class="row">
+        <!-- Последние отзывы -->
+        <div class="col-lg-7">
+            <div class="card steam-card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-comments me-2"></i> Последние отзывы</h5>
+                </div>
+                <div class="card-body">
+                    {% for review in recent_reviews %}
+                        <div class="d-flex mb-3 pb-3 border-bottom border-secondary">
+                            <div class="flex-shrink-0 me-3">
+                                <i class="fas fa-user-circle fa-2x text-muted"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <strong>{{ review.user.username }}</strong>
+                                        <span class="text-muted small">о игре</span>
+                                        <a href="{% url 'shop:game_detail' pk=review.game.id %}" class="fw-semibold">{{ review.game.title }}</a>
+                                    </div>
+                                    <div class="text-warning">
+                                        {% for i in '12345'|make_list %}
+                                            {% if forloop.counter <= review.rating %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% if review.text %}
+                                    <p class="mb-1 mt-1 small">{{ review.text|truncatechars:180 }}</p>
+                                {% endif %}
+                                <small class="text-muted">{{ review.created_at|date:"d.m.Y H:i" }}</small>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted">Пока нет отзывов.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Недавние покупки -->
+        <div class="col-lg-5">
+            <div class="card steam-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-shopping-bag me-2"></i> Недавние покупки</h5>
+                </div>
+                <div class="card-body">
+                    {% for purchase in recent_purchases %}
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="flex-shrink-0 me-3">
+                                <img src="{{ purchase.game.display_image }}" width="48" height="48" class="rounded" style="object-fit: cover;">
+                            </div>
+                            <div>
+                                <div><strong>{{ purchase.game.title }}</strong></div>
+                                <small class="text-muted">Купил игрок • {{ purchase.order.created_at|date:"d.m.Y" }}</small>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted">Пока нет покупок.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
