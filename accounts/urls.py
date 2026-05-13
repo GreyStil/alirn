@@ -1,1 +1,1 @@
-    path('profile/achievements/', views.ProfileAchievementsView.as_view(), name='profile_achievements'),
+    path('community/', views.CommunityView.as_view(), name='community'),
