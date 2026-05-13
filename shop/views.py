@@ -4,6 +4,7 @@ from django.views.generic import ListView, DetailView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.db.models import Q
 
 from .models import Game, Review, Ticket, TicketReply
 
@@ -68,6 +69,20 @@ class CheckoutView(LoginRequiredMixin, View):
 
 class OrderCompleteView(LoginRequiredMixin, TemplateView):
     template_name = 'shop/order_complete.html'
+
+class SearchView(View):
+    template_name = 'shop/search.html'
+    def get(self, request):
+        query = request.GET.get('q', '')
+        games = []
+        if query:
+            games = Game.objects.filter(
+                Q(title__icontains=query) |
+                Q(description__icontains=query) |
+                Q(developer__icontains=query)
+            )
+        paginator = Paginator(games, 12)
+        return render(request, self.template_name, {'query': query, 'games': paginator.get_page(request.GET.get('page', 1))})
 
 # ==================== MODERATOR ====================
 class ModeratorReviewsView(UserPassesTestMixin, ListView):
