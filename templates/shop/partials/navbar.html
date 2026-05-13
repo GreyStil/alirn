@@ -1,56 +1,98 @@
-<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-2" style="background-color: var(--steam-dark); border-bottom: 1px solid #3d4f5f;">
     <div class="container">
-        <a class="navbar-brand fw-bold d-flex align-items-center" href="{% url 'shop:index' %}">
-            <i class="fas fa-gamepad me-2"></i> Alirn
+        <!-- Logo -->
+        <a class="navbar-brand fw-bold fs-4 d-flex align-items-center" href="{% url 'shop:index' %}">
+            <i class="fas fa-gamepad me-2 text-info"></i>
+            <span class="text-white">Alirn</span>
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto">
+
+        <div class="collapse navbar-collapse" id="mainNavbar">
+            <!-- Main Navigation Tabs -->
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <!-- Магазин -->
                 <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}" href="{% url 'shop:index' %}">Главная</a>
+                    <a class="nav-link px-3 {% if request.resolver_match.url_name in 'index,catalog' %}active fw-semibold{% endif %}" 
+                       href="{% url 'shop:index' %}">
+                        <i class="fas fa-store me-1"></i> Магазин
+                    </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'catalog' %}active{% endif %}" href="{% url 'shop:catalog' %}">Каталог</a>
-                </li>
+
                 {% if user.is_authenticated %}
+                <!-- Библиотека -->
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'accounts:profile_library' %}">Библиотека</a>
+                    <a class="nav-link px-3 {% if 'library' in request.path %}active fw-semibold{% endif %}" 
+                       href="{% url 'accounts:profile_library' %}">
+                        <i class="fas fa-book me-1"></i> Библиотека
+                    </a>
                 </li>
+
+                <!-- Желаемое -->
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'accounts:profile_keys' %}">Мои ключи</a>
+                    <a class="nav-link px-3 {% if 'favorites' in request.path %}active fw-semibold{% endif %}" 
+                       href="{% url 'accounts:profile_favorites' %}">
+                        <i class="fas fa-heart me-1"></i> Желаемое
+                    </a>
+                </li>
+
+                <!-- Личный кабинет -->
+                <li class="nav-item">
+                    <a class="nav-link px-3 {% if request.resolver_match.url_name == 'profile' %}active fw-semibold{% endif %}" 
+                       href="{% url 'accounts:profile' %}">
+                        <i class="fas fa-user me-1"></i> Личный кабинет
+                    </a>
+                </li>
+
+                <!-- Настройки -->
+                <li class="nav-item">
+                    <a class="nav-link px-3 {% if 'settings' in request.path %}active fw-semibold{% endif %}" 
+                       href="{% url 'accounts:profile_settings' %}">
+                        <i class="fas fa-cog me-1"></i> Настройки
+                    </a>
                 </li>
                 {% endif %}
             </ul>
 
+            <!-- Search -->
             <form class="d-flex me-3" method="get" action="{% url 'shop:catalog' %}">
-                <input class="form-control form-control-sm me-2" type="search" name="q" placeholder="Поиск игр..." aria-label="Search" value="{{ request.GET.q }}">
-                <button class="btn btn-outline-light btn-sm" type="submit"><i class="fas fa-search"></i></button>
+                <div class="input-group input-group-sm">
+                    <input type="text" class="form-control bg-dark text-white border-secondary" 
+                           name="q" placeholder="Поиск игр..." value="{{ request.GET.q }}">
+                    <button class="btn btn-outline-light" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
             </form>
 
+            <!-- User Menu -->
             <ul class="navbar-nav">
                 {% if user.is_authenticated %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-user-circle me-1"></i> {{ user.username }}
+                        <i class="fas fa-user-circle fa-lg me-2"></i>
+                        <span>{{ user.username }}</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
-                        <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">Профиль</a></li>
-                        <li><a class="dropdown-item" href="{% url 'accounts:profile_settings' %}">Настройки</a></li>
+                        <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="fas fa-user me-2"></i> Профиль</a></li>
+                        <li><a class="dropdown-item" href="{% url 'accounts:profile_settings' %}"><i class="fas fa-cog me-2"></i> Настройки</a></li>
+                        <li><a class="dropdown-item" href="{% url 'accounts:profile_keys' %}"><i class="fas fa-key me-2"></i> Мои ключи</a></li>
                         {% if user.is_staff %}
-                        <li><a class="dropdown-item" href="/admin/">Админ-панель</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/admin/"><i class="fas fa-shield-alt me-2"></i> Админ-панель</a></li>
                         {% endif %}
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">Выйти</a></li>
+                        <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}"><i class="fas fa-sign-out-alt me-2"></i> Выйти</a></li>
                     </ul>
                 </li>
                 {% else %}
-                <li class="nav-item">
+                <li class="nav-item me-2">
                     <a class="nav-link" href="{% url 'accounts:login' %}">Вход</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link btn btn-outline-light btn-sm px-3" href="{% url 'accounts:register' %}">Регистрация</a>
+                    <a class="btn btn-outline-info btn-sm px-3" href="{% url 'accounts:register' %}">Регистрация</a>
                 </li>
                 {% endif %}
             </ul>
