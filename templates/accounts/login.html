@@ -3,37 +3,59 @@
 {% block title %}Вход - Alirn{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-lg-6 offset-lg-3">
-            <div class="card" style="background-color: #16213e; border-color: #e94560;">
-                <div class="card-body">
-                    <h5 class="card-title text-center mb-4">Вход в систему</h5>
-                    
-                    <form method="post">
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7">
+            <div class="card steam-card shadow-lg border-0" style="background-color: var(--steam-card-bg); border: 1px solid var(--steam-border);">
+                <div class="card-body p-4 p-md-5">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-sign-in-alt fa-3x mb-3" style="color: var(--steam-accent);"></i>
+                        <h4 class="fw-bold text-white">Вход в систему</h4>
+                        <p class="text-muted small">Добро пожаловать обратно!</p>
+                    </div>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show py-2" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" novalidate>
                         {% csrf_token %}
-                        
+
                         <div class="mb-3">
-                            <label class="form-label">Имя пользователя или Email</label>
-                            <input type="text" name="username" class="form-control" required autofocus>
+                            <label class="form-label text-white-50">Имя пользователя или Email</label>
+                            <input type="text" name="username" class="form-control bg-dark text-white border-secondary" 
+                                   placeholder="Ваш никнейм или email" required autofocus>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Пароль</label>
-                            <input type="password" name="password" class="form-control" required>
+
+                        <div class="mb-4">
+                            <label class="form-label text-white-50">Пароль</label>
+                            <input type="password" name="password" class="form-control bg-dark text-white border-secondary" 
+                                   placeholder="Введите пароль" required>
                         </div>
-                        
-                        <button type="submit" class="btn btn-primary w-100 mb-3">Войти</button>
-                        
-                        <hr>
-                        
-                        <p class="text-center">
-                            Нет аккаунта? <a href="{% url 'accounts:register' %}">Зарегистрируйтесь</a>
-                        </p>
-                        <p class="text-center">
-                            <a href="{% url 'accounts:password_reset' %}">Забыли пароль?</a>
-                        </p>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold mb-3" 
+                                style="background-color: var(--steam-accent); border: none;">
+                            <i class="fas fa-sign-in-alt me-2"></i> Войти
+                        </button>
+
+                        <div class="text-center">
+                            <a href="{% url 'accounts:password_reset' %}" class="text-muted small text-decoration-none">Забыли пароль?</a>
+                        </div>
                     </form>
+
+                    <hr class="my-4" style="border-color: #3d4f5f;">
+
+                    <div class="text-center">
+                        <p class="text-muted mb-0 small">
+                            Нет аккаунта? 
+                            <a href="{% url 'accounts:register' %}" class="text-info text-decoration-none fw-semibold">Зарегистрируйтесь</a>
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
