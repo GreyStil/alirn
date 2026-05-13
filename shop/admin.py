@@ -3,6 +3,8 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django.db.models import F
 from decimal import Decimal
+from django.http import HttpResponse
+import csv
 from .models import Game, GameKey, Cart, Order, OrderGame, Review, BalanceTopUp, UserProfile
 
 
@@ -12,6 +14,21 @@ class GameAdmin(admin.ModelAdmin):
     list_filter = ('platform', 'genre', 'created_at')
     search_fields = ('title', 'developer', 'publisher')
     ordering = ('-created_at',)
+
+    actions = ['generate_keys']
+
+    @admin.action(description='Сгенерировать 10 ключей для выбранных игр')
+    def generate_keys(self, request, queryset):
+        created_count = 0
+        for game in queryset:
+            for i in range(10):  # генерируем по 10 ключей
+                import uuid
+                GameKey.objects.create(
+                    game=game,
+                    key=str(uuid.uuid4()).upper().replace('-', '')[:16]
+                )
+                created_count += 1
+        self.message_user(request, f'Создано {created_count} ключей для {queryset.count()} игр.')
 
 
 @admin.register(GameKey)
@@ -46,7 +63,7 @@ class OrderAdmin(admin.ModelAdmin):
     search_fields = ('user__username',)
     readonly_fields = ('created_at',)
 
-    actions = ['mark_as_completed', 'mark_as_cancelled']
+    actions = ['mark_as_completed', 'mark_as_cancelled', 'export_as_csv']
 
     @admin.action(description='Пометить как выполненные')
     def mark_as_completed(self, request, queryset):
@@ -57,6 +74,25 @@ class OrderAdmin(admin.ModelAdmin):
     def mark_as_cancelled(self, request, queryset):
         updated = queryset.update(status='cancelled')
         self.message_user(request, f'{updated} заказов отменены.')
+
+    @admin.action(description='Экспортировать выбранные заказы в CSV')
+    def export_as_csv(self, request, queryset):
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename="orders_export.csv"'
+        writer = csv.writer(response)
+        writer.writerow(['ID заказа', 'Пользователь', 'Сумма', 'Статус', 'Дата создания', 'Игры'])
+
+        for order in queryset.prefetch_related('order_games__game'):
+            games = ', '.join([og.game.title for og in order.order_games.all()])
+            writer.writerow([
+                order.id,
+                order.user.username,
+                order.total_price,
+                order.status,
+                order.created_at.strftime('%Y-%m-%d %H:%M'),
+                games
+            ])
+        return response
 
 
 @admin.register(OrderGame)
@@ -76,7 +112,6 @@ class ReviewAdmin(admin.ModelAdmin):
 
     @admin.action(description='Одобрить отзывы')
     def approve_reviews(self, request, queryset):
-        # Можно добавить поле is_approved в модель при необходимости
         updated = queryset.update(is_approved=True)
         self.message_user(request, f'{updated} отзывов одобрено.')
 
@@ -92,6 +127,21 @@ class BalanceTopUpAdmin(admin.ModelAdmin):
     list_filter = ('created_at',)
     search_fields = ('user__username',)
     readonly_fields = ('created_at',)
+
+    actions = ['approve_and_credit']
+
+    @admin.action(description='Подтвердить и зачислить баланс')
+    def approve_and_credit(self, request, queryset):
+        credited = 0
+        for topup in queryset:
+            if not topup.is_credited:  # предполагаем, что есть такое поле (или проверяем по статусу)
+                profile = topup.user.profile
+                profile.balance += topup.amount
+                profile.save()
+                topup.is_credited = True
+                topup.save()
+                credited += 1
+        self.message_user(request, f'Баланс зачислен {credited} пользователям.')
 
 
 class UserProfileInline(admin.StackedInline):
