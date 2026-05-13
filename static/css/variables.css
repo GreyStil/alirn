@@ -1,0 +1,40 @@
+:root {
+    --steam-bg: #1b2838;
+    --steam-dark: #171a21;
+    --steam-accent: #66c0f4;
+    --steam-text: #c6d4df;
+    --steam-light-text: #ffffff;
+    --steam-card-bg: #2a475e;
+    --steam-border: #3d4f5f;
+    --steam-hover-shadow: rgba(102, 192, 244, 0.25);
+    --primary-color: #66c0f4;
+    --success-color: #5cb85c;
+    --danger-color: #d9534f;
+}
+
+/* Steam-like utility classes */
+.steam-card {
+    background-color: var(--steam-card-bg);
+    border: 1px solid var(--steam-border);
+    border-radius: 6px;
+    transition: all 0.25s ease;
+}
+
+.steam-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 25px var(--steam-hover-shadow);
+    border-color: var(--steam-accent);
+}
+
+.price-tag {
+    color: #acdbf5;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.section-title {
+    color: #ffffff;
+    font-weight: 600;
+    border-bottom: 2px solid var(--steam-accent);
+    padding-bottom: 10px;
+}
