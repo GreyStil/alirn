@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ game.title }} - Alirn{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <!-- Изображение -->
+        <div class="col-lg-4">
+            {% if game.image %}
+                <img src="{{ game.image.url }}" class="img-fluid rounded" alt="{{ game.title }}">
+            {% else %}
+                <img src="https://via.placeholder.com/400x500?text={{ game.title }}" class="img-fluid rounded" alt="{{ game.title }}">
+            {% endif %}
+        </div>
+        
+        <!-- Информация -->
+        <div class="col-lg-8">
+            <h1 class="mb-3">{{ game.title }}</h1>
+            
+            <p><strong>Разработчик:</strong> {{ game.developer }}</p>
+            <p><strong>Издатель:</strong> {{ game.publisher }}</p>
+            <p><strong>Дата выхода:</strong> {{ game.release_date|date:"d.m.Y" }}</p>
+            <p><strong>Платформа:</strong> {{ game.get_platform_display }}</p>
+            <p><strong>Жанр:</strong> {{ game.get_genre_display }}</p>
+            <p><strong>Регион активации:</strong> {{ game.region }}</p>
+            
+            {% if game.system_requirements %}
+            <div class="alert alert-info">
+                <strong>Системные требования:</strong>
+                <pre>{{ game.system_requirements }}</pre>
+            </div>
+            {% endif %}
+            
+            <!-- Цена и кнопки -->
+            <div class="card mb-3 card-highlight">
+                <div class="card-body">
+                    <div class="display-4 mb-3">
+                        <span class="game-price">{{ game.current_price }} ₽</span>
+                        {% if game.discount_percent > 0 %}
+                            <br>
+                            <span class="old-price">{{ game.price }} ₽</span>
+                            <span class="game-discount" style="font-size: 24px;">-{{ game.discount_percent }}%</span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if user.is_authenticated %}
+                        {% if is_owned %}
+                            <div class="alert alert-success">✓ В вашей библиотеке</div>
+                        {% else %}
+                            <form method="post" action="{% url 'shop:add_to_cart' game.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary btn-lg w-100">Добавить в корзину</button>
+                            </form>
+                        {% endif %}
+                        
+                        <div class="mt-2">
+                            {% if is_favorite %}
+                                <form method="post" action="{% url 'shop:remove_favorite' game.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger w-100">❤️ Удалить из избранного</button>
+                                </form>
+                            {% else %}
+                                <form method="post" action="{% url 'shop:add_favorite' game.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger w-100">🤍 Добавить в избранное</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="btn btn-primary btn-lg w-100">Войдите, чтобы купить</a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Описание -->
+            <div class="card card-dark">
+                <div class="card-body">
+                    <h5 class="card-title">Описание</h5>
+                    <p>{{ game.description }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Отзывы -->
+    <div class="section-title">Отзывы и оценки</div>
+    
+    <div class="row mb-4">
+        <div class="col-lg-3">
+            <div class="card card-dark">
+                <div class="card-body text-center">
+                    <div class="display-4 stars">★</div>
+                    <h5>{{ average_rating|floatformat:1 }} / 5.0</h5>
+                    <p>Всего отзывов: {{ game.reviews.count }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-9">
+            {% if user.is_authenticated and is_owned %}
+                <div class="card mb-4 card-dark">
+                    <div class="card-body">
+                        <h5 class="card-title">Ваш отзыв</h5>
+                        
+                        <form method="post" action="{% url 'shop:add_review' game.id %}">
+                            {% csrf_token %}
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Оценка</label>
+                                <select name="rating" class="form-select" aria-label="Select rating">
+                                    {% for i in "12345" %}
+                                        <option value="{{ i }}" {% if user_review and user_review.rating == i %}selected{% endif %}>{{ i }} ★</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Комментарий (опционально)</label>
+                                <textarea name="text" class="form-control" rows="4" placeholder="Напишите ваше мнение об игре...">{% if user_review %}{{ user_review.text }}{% endif %}</textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Отправить отзыв</button>
+                            {% if user_review %}
+                                <form method="post" action="{% url 'shop:delete_review' user_review.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">Удалить отзыв</button>
+                                </form>
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Список отзывов -->
+            {% for review in reviews %}
+            <div class="review-item">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <strong>{{ review.user.username }}</strong>
+                        <div class="stars">
+                            {% for i in "12345" %}
+                                {% if i|add:"0" <= review.rating %}★{% else %}☆{% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <small class="text-muted">{{ review.created_at|date:"d.m.Y H:i" }}</small>
+                </div>
+                <p>{{ review.text|default:"(Без комментария)" }}</p>
+            </div>
+            {% empty %}
+            <p style="color: #999;">Отзывы пока не добавлены. Будьте первым!</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

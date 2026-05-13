@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Оформление заказа - Alirn{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="section-title">💳 Оформление заказа</div>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4 card-dark">
+                <div class="card-body">
+                    <h5 class="card-title">Товары в заказе</h5>
+                    <table class="table order-table">
+                        <thead>
+                            <tr>
+                                <th>Игра</th>
+                                <th>Цена</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for game in games %}
+                            <tr>
+                                <td>{{ game.title }}</td>
+                                <td class="game-price">{{ game.current_price }} ₽</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card" style="background-color: #16213e; border-color: #e94560;">
+                <div class="card-body">
+                    <h5 class="card-title">Итоги</h5>
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <strong>Ваш баланс:</strong> <span class="game-price">{{ balance }} ₽</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Сумма заказа:</strong> <span class="game-price">{{ total_price }} ₽</span>
+                    </div>
+                    
+                    {% if insufficient_balance %}
+                    <div class="alert alert-danger">
+                        ❌ Недостаточно средств на счёте!
+                    </div>
+                    <a href="{% url 'accounts:balance_topup' %}" class="btn btn-warning w-100">Пополнить баланс</a>
+                    {% else %}
+                    <form method="post" class="w-100">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary w-100">Оплатить</button>
+                    </form>
+                    {% endif %}
+                    
+                    <a href="{% url 'shop:cart' %}" class="btn btn-outline-secondary w-100 mt-2">Вернуться в корзину</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

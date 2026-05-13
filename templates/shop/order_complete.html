@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Заказ успешно оформлен - Alirn{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card text-center" style="background-color: #16213e; border-color: #4CAF50;">
+                <div class="card-body">
+                    <h1 class="text-success mb-3">✓ Заказ успешно оформлен!</h1>
+                    
+                    {% if order %}
+                    <div class="alert alert-info">
+                        <h5>Номер заказа: #{{ order.id }}</h5>
+                        <p>{{ order.created_at|date:"d.m.Y H:i" }}</p>
+                    </div>
+                    
+                    {% if order_games %}
+                    <h5 class="mb-3">Ваши ключи активации:</h5>
+                    <div class="card-text">
+                        {% for order_game in order_games %}
+                        <div class="card mb-3" style="background-color: #0f3460; border-color: #333;">
+                            <div class="card-body">
+                                <h6>{{ order_game.game.title }}</h6>
+                                <p><strong>Ключ:</strong></p>
+                                <div class="alert alert-dark alert-key">
+                                    {{ order_game.key.key }}
+                                </div>
+                                <p><strong>Платформа:</strong> {{ order_game.game.get_platform_display }}</p>
+                                <p><strong>Регион:</strong> {{ order_game.game.region }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <p>⚠️ Сохраните ключи активации. Они также доступны в вашей <a href="{% url 'accounts:profile_library' %}">библиотеке</a>.</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <a href="{% url 'shop:index' %}" class="btn btn-primary btn-lg">Вернуться на главную</a>
+                        <a href="{% url 'accounts:profile_library' %}" class="btn btn-secondary btn-lg">Посмотреть библиотеку</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

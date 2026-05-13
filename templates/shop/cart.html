@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Корзина - Alirn{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="section-title">🛒 Корзина</div>
+    
+    {% if games %}
+    <div class="row">
+        <div class="col-lg-8">
+            <table class="table order-table">
+                <thead>
+                    <tr>
+                        <th>Игра</th>
+                        <th>Платформа</th>
+                        <th>Цена</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for game in games %}
+                    <tr>
+                        <td>
+                            <strong><a href="{% url 'shop:game_detail' game.id %}">{{ game.title }}</a></strong>
+                        </td>
+                        <td>{{ game.get_platform_display }}</td>
+                        <td class="game-price">{{ game.current_price }} ₽</td>
+                        <td>
+                            <form method="post" class="form-remove-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">✕</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card" style="background-color: #16213e; border-color: #e94560;">
+                <div class="card-body">
+                    <h5 class="card-title">Сумма заказа</h5>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>Итого:</span>
+                        <span class="game-price">{{ total_price }} ₽</span>
+                    </div>
+                    <a href="{% url 'shop:checkout' %}" class="btn btn-primary w-100">Оформить заказ</a>
+                    <a href="{% url 'shop:catalog' %}" class="btn btn-outline-secondary w-100 mt-2">Продолжить покупки</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <h5>Корзина пуста</h5>
+        <p>Добавьте игры из каталога</p>
+        <a href="{% url 'shop:catalog' %}" class="btn btn-primary">Перейти в каталог</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

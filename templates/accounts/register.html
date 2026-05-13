@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Регистрация - Alirn{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-6 offset-lg-3">
+            <div class="card" style="background-color: #16213e; border-color: #e94560;">
+                <div class="card-body">
+                    <h5 class="card-title text-center mb-4">Регистрация</h5>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Имя пользователя</label>
+                            <input type="text" name="username" class="form-control" required>
+                            <small class="text-muted">Только буквы, цифры и символы @/./+/-/_</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Пароль</label>
+                            <input type="password" name="password" class="form-control" required>
+                            <small class="text-muted">Минимум 8 символов</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Подтверждение пароля</label>
+                            <input type="password" name="password_confirm" class="form-control" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100 mb-3">Зарегистрироваться</button>
+                        
+                        <hr>
+                        
+                        <p class="text-center">
+                            Уже зарегистрированы? <a href="{% url 'accounts:login' %}">Войдите</a>
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Заказ #{{ order.id }} - Alirn{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="section-title">Заказ #{{ order.id }}</div>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4 card-dark">
+                <div class="card-body">
+                    <h5 class="card-title">Информация о заказе</h5>
+                    <p><strong>Дата:</strong> {{ order.created_at|date:"d.m.Y H:i" }}</p>
+                    <p><strong>Статус:</strong> <span class="badge bg-primary">{{ order.get_status_display }}</span></p>
+                    <p><strong>Сумма:</strong> <span class="game-price">{{ order.total_price }} ₽</span></p>
+                </div>
+            </div>
+            
+            <h5>Товары в заказе:</h5>
+            {% for order_game in order_games %}
+            <div class="card mb-3" style="background-color: #0f3460; border-color: #333;">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <h6><a href="{% url 'shop:game_detail' order_game.game.id %}">{{ order_game.game.title }}</a></h6>
+                            <p><strong>Платформа:</strong> {{ order_game.game.get_platform_display }}</p>
+                            <p><strong>Регион:</strong> {{ order_game.game.region }}</p>
+                        </div>
+                        <div class="col-lg-4 text-end">
+                            <p class="game-price">{{ order_game.price_at_purchase }} ₽</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3" style="background-color: #16213e; border-color: #e94560;">
+                        <div class="card-body">
+                            <p><strong>Ключ активации:</strong></p>
+                            <div class="alert alert-dark alert-key">
+                                {{ order_game.key.key }}
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary" onclick="copyToClipboard('{{ order_game.key.key }}')">📋 Копировать</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="col-lg-4">
+            <a href="{% url 'accounts:profile_orders' %}" class="btn btn-outline-secondary w-100">← Вернуться к заказам</a>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        alert('Ключ скопирован в буфер обмена!');
+    });
+}
+</script>
+{% endblock %}

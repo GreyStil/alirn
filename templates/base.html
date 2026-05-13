@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Alirn - Интернет-магазин цифровых товаров{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    {% load static %}
+    <link href="{% static 'css/custom.css' %}" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1a1a2e;
+            --secondary-color: #16213e;
+            --accent-color: #0f3460;
+            --highlight-color: #e94560;
+        }
+        
+        body {
+            background-color: var(--primary-color);
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar {
+            background-color: var(--secondary-color);
+            border-bottom: 2px solid var(--highlight-color);
+        }
+        
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--highlight-color) !important;
+        }
+        
+        .nav-link {
+            color: #e0e0e0 !important;
+            margin-left: 15px;
+            transition: all 0.3s;
+        }
+        
+        .nav-link:hover {
+            color: var(--highlight-color) !important;
+        }
+        
+        .btn-primary {
+            background-color: var(--highlight-color);
+            border-color: var(--highlight-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #d63a50;
+            border-color: #d63a50;
+        }
+        
+        .game-card {
+            background-color: var(--accent-color);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid #333;
+        }
+        
+        .game-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(233, 69, 96, 0.3);
+        }
+        
+        .game-card img {
+            height: 200px;
+            object-fit: cover;
+            width: 100%;
+        }
+        
+        .game-card-body {
+            padding: 15px;
+        }
+        
+        .game-card-title {
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        
+        .game-price {
+            color: var(--highlight-color);
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .game-discount {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        .old-price {
+            text-decoration: line-through;
+            color: #999;
+            margin-right: 10px;
+        }
+        
+        footer {
+            background-color: var(--secondary-color);
+            border-top: 1px solid #333;
+            color: #999;
+            padding: 30px 0;
+            margin-top: 50px;
+        }
+        
+        .carousel-item img {
+            height: 400px;
+            object-fit: cover;
+        }
+        
+        .messages {
+            margin-top: 20px;
+        }
+        
+        .alert {
+            border-radius: 0;
+        }
+        
+        .container {
+            margin-top: 30px;
+        }
+        
+        .section-title {
+            color: var(--highlight-color);
+            font-weight: bold;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--highlight-color);
+            padding-bottom: 15px;
+        }
+        
+        .filter-panel {
+            background-color: var(--secondary-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .filter-title {
+            color: #fff;
+            font-weight: bold;
+            margin-bottom: 15px;
+            margin-top: 20px;
+        }
+        
+        .filter-title:first-child {
+            margin-top: 0;
+        }
+        
+        .form-check-label {
+            color: #e0e0e0;
+            margin-left: 10px;
+        }
+        
+        .form-select, .form-control {
+            background-color: var(--accent-color);
+            border-color: #333;
+            color: #e0e0e0;
+        }
+        
+        .form-select option, .form-control {
+            background-color: var(--accent-color);
+            color: #e0e0e0;
+        }
+        
+        .cart-item {
+            background-color: var(--secondary-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .order-table {
+            background-color: transparent;
+        }
+        
+        .order-table td, .order-table th {
+            border-color: #333;
+        }
+        
+        .review-item {
+            background-color: var(--secondary-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--highlight-color);
+        }
+        
+        .stars {
+            color: #FFD700;
+        }
+        
+        .btn-danger {
+            background-color: #c82333;
+            border-color: #c82333;
+        }
+        
+        .btn-danger:hover {
+            background-color: #a01d28;
+            border-color: #a01d28;
+        }
+        
+        .search-form {
+            margin: 20px 0;
+        }
+        
+        .badge-primary {
+            background-color: var(--highlight-color);
+        }
+        
+        a {
+            color: var(--highlight-color);
+            text-decoration: none;
+        }
+        
+        a:hover {
+            color: #e94570;
+        }
+        
+        .profile-menu {
+            background-color: var(--secondary-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .profile-menu a {
+            display: block;
+            padding: 10px;
+            color: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        
+        .profile-menu a:hover, .profile-menu a.active {
+            background-color: var(--accent-color);
+            color: var(--highlight-color);
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Навигация -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'shop:index' %}">🎮 Alirn</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto"><li class="nav-item">
+                        <a class="nav-link" href="{% url 'shop:catalog' %}">Каталог</a>
+                    </li>
+                    {% if user.is_authenticated %}<li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:profile_library' %}">Библиотека</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:profile_balance' %}">💰 {{ user.profile.balance }}</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'shop:cart' %}">
+                                🛒 Корзина
+                                {% if user.cart.games.count > 0 %}
+                                    <span class="badge bg-danger">{{ user.cart.games.count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                👤 {{ user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">Профиль</a></li>
+                                <li><a class="dropdown-item" href="{% url 'accounts:profile_settings' %}">Настройки</a></li>
+                                {% if user.is_staff %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="/admin/">Админ-панель</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">Выход</a></li>
+                            </ul>
+                        </li>
+                    {% else %}<li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:login' %}">Вход</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:register' %}">Регистрация</a>
+                        </li>
+                    {% endif %}</ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Сообщения -->
+    <div class="container">
+        {% if messages %}
+            <div class="messages" role="alert">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Основной контент -->
+    {% block content %}{% endblock %}
+
+    <!-- Подвал -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>Alirn</h5>
+                    <p>Централизованный интернет-магазин цифровых товаров. Ключи игр, подарочные карты и многое другое.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Навигация</h5>
+                    <ul class="footer-list"><li><a href="{% url 'shop:index' %}" class="footer-link">Главная</a></li>
+                        <li><a href="{% url 'shop:catalog' %}" class="footer-link">Каталог</a></li>
+                        {% if user.is_authenticated %}<li><a href="{% url 'accounts:profile' %}" class="footer-link">Профиль</a></li>
+                        {% endif %}</ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Информация</h5>
+                    <p class="footer-text">© 2024 Alirn. Все права защищены.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

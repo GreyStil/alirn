@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Настройки - Alirn{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="section-title">⚙️ Настройки</div>
+    
+    <div class="row">
+        <!-- Боковая навигация -->
+        <div class="col-lg-3">
+            <div class="profile-menu">
+                <a href="{% url 'accounts:profile' %}">Обзор</a>
+                <a href="{% url 'accounts:profile_orders' %}">Мои заказы</a>
+                <a href="{% url 'accounts:profile_library' %}">Библиотека</a>
+                <a href="{% url 'accounts:profile_favorites' %}">Избранное</a>
+                <a href="{% url 'accounts:profile_balance' %}">💰 Баланс</a>
+                <a href="{% url 'accounts:profile_settings' %}" class="active">Настройки</a>
+            </div>
+        </div>
+        
+        <!-- Основной контент -->
+        <div class="col-lg-9">
+            <!-- Изменение пароля -->
+            <div class="card mb-4 card-dark">
+                <div class="card-body">
+                    <h5 class="card-title">Изменить пароль</h5>
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Текущий пароль</label>
+                            <input type="password" name="old_password" class="form-control">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Новый пароль</label>
+                            <input type="password" name="new_password" class="form-control">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Подтверждение пароля</label>
+                            <input type="password" name="new_password_confirm" class="form-control">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" name="password_submit">Изменить пароль</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Изменение email -->
+            <div class="card mb-4 card-dark">
+                <div class="card-body">
+                    <h5 class="card-title">Изменить Email</h5>
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Новый Email</label>
+                            <input type="email" name="new_email" class="form-control" value="{{ user.email }}">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Изменить Email</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Загрузка аватара -->
+            <div class="card card-dark">
+                <div class="card-body">
+                    <h5 class="card-title">Аватар профиля</h5>
+                    
+                    {% if user.profile.avatar %}
+                    <div class="mb-3">
+                        <img src="{{ user.profile.avatar.url }}" alt="Аватар" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Выберите изображение</label>
+                            <input type="file" name="avatar" class="form-control" accept="image/*">
+                            <small class="text-muted">Поддерживаемые форматы: JPG, PNG, GIF (максимум 5 МБ)</small>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Загрузить аватар</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

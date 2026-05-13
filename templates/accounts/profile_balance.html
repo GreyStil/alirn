@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Баланс - Alirn{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="section-title">💰 Мой баланс</div>
+    
+    <div class="row">
+        <!-- Боковая навигация -->
+        <div class="col-lg-3">
+            <div class="profile-menu">
+                <a href="{% url 'accounts:profile' %}">Обзор</a>
+                <a href="{% url 'accounts:profile_orders' %}">Мои заказы</a>
+                <a href="{% url 'accounts:profile_library' %}">Библиотека</a>
+                <a href="{% url 'accounts:profile_favorites' %}">Избранное</a>
+                <a href="{% url 'accounts:profile_balance' %}" class="active">💰 Баланс</a>
+                <a href="{% url 'accounts:profile_settings' %}">Настройки</a>
+            </div>
+        </div>
+        
+        <!-- Основной контент -->
+        <div class="col-lg-9">
+            <!-- Текущий баланс -->
+            <div class="card mb-4" style="background-color: #16213e; border-color: #e94560;">
+                <div class="card-body">
+                    <h5 class="card-title">Текущий баланс</h5>
+                    <div class="display-4 game-price mb-3">{{ balance }} ₽</div>
+                    <a href="{% url 'accounts:balance_topup' %}" class="btn btn-primary btn-lg">Пополнить баланс</a>
+                </div>
+            </div>
+            
+            <!-- История пополнений -->
+            <div class="card card-dark">
+                <div class="card-body">
+                    <h5 class="card-title">История пополнений</h5>
+                    
+                    {% if topups %}
+                    <div class="table-responsive">
+                        <table class="table order-table">
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Сумма</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for topup in topups %}
+                                <tr>
+                                    <td>{{ topup.created_at|date:"d.m.Y H:i" }}</td>
+                                    <td class="game-price">{{ topup.amount }} ₽</td>
+                                    <td>
+                                        {% if topup.success %}
+                                            <span class="badge bg-success">✓ Успешно</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">✕ Ошибка</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Пагинация -->
+                    {% if topups.has_other_pages %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if topups.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1">Первая</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ topups.previous_page_number }}">Назад</a>
+                                </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">{{ topups.number }} / {{ topups.paginator.num_pages }}</span>
+                            </li>
+                            
+                            {% if topups.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ topups.next_page_number }}">Вперёд</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ topups.paginator.num_pages }}">Последняя</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    {% else %}
+                    <p style="color: #999;">История пуста</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

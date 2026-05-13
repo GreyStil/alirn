@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Профиль - Alirn{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="section-title">👤 Мой профиль</div>
+    
+    <div class="row">
+        <!-- Боковая навигация -->
+        <div class="col-lg-3">
+            <div class="profile-menu">
+                <a href="{% url 'accounts:profile' %}" class="active">Обзор</a>
+                <a href="{% url 'accounts:profile_orders' %}">Мои заказы</a>
+                <a href="{% url 'accounts:profile_library' %}">Библиотека</a>
+                <a href="{% url 'accounts:profile_favorites' %}">Избранное</a>
+                <a href="{% url 'accounts:profile_balance' %}">💰 Баланс</a>
+                <a href="{% url 'accounts:profile_settings' %}">Настройки</a>
+            </div>
+        </div>
+        
+        <!-- Основной контент -->
+        <div class="col-lg-9">
+            <div class="row">
+                <!-- Статистика -->
+                <div class="col-lg-4 mb-3">
+                    <div class="card text-center" style="background-color: #16213e; border-color: #333;">
+                        <div class="card-body">
+                            <h6 style="color: #999;">Мои заказы</h6>
+                            <h3 class="text-primary">{{ orders_count }}</h3>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 mb-3">
+                    <div class="card text-center" style="background-color: #16213e; border-color: #333;">
+                        <div class="card-body">
+                            <h6 style="color: #999;">Библиотека</h6>
+                            <h3 class="text-success">{{ library_count }}</h3>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 mb-3">
+                    <div class="card text-center" style="background-color: #16213e; border-color: #333;">
+                        <div class="card-body">
+                            <h6 style="color: #999;">Баланс</h6>
+                            <h3 class="game-price">{{ balance }} ₽</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Информация профиля -->
+            <div class="card mb-3" style="background-color: #16213e; border-color: #333;">
+                <div class="card-body">
+                    <h5 class="card-title">Информация профиля</h5>
+                    <p><strong>Имя пользователя:</strong> {{ user.username }}</p>
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                    <p><strong>Дата присоединения:</strong> {{ user.profile.created_at|date:"d.m.Y" }}</p>
+                </div>
+            </div>
+            
+            <!-- Ссылки на быстрый переход -->
+            <div class="card card-dark">
+                <div class="card-body">
+                    <h5 class="card-title">Быстрые ссылки</h5>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'accounts:profile_orders' %}" class="btn btn-outline-primary">Просмотреть заказы</a>
+                        <a href="{% url 'accounts:profile_library' %}" class="btn btn-outline-primary">Открыть библиотеку</a>
+                        <a href="{% url 'accounts:balance_topup' %}" class="btn btn-outline-warning">Пополнить баланс</a>
+                        <a href="{% url 'accounts:profile_settings' %}" class="btn btn-outline-secondary">Настройки</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

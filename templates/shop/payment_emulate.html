@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Обработка платежа - Alirn{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-6 offset-lg-3">
+            <div class="card text-center" style="background-color: #16213e; border-color: #e94560;">
+                <div class="card-body">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Загрузка...</span>
+                    </div>
+                    <h5>Обработка платежа...</h5>
+                    <p class="game-price">{{ amount }} ₽</p>
+                    <p class="text-muted">Пожалуйста, не закрывайте эту страницу</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Эмуляция обработки платежа с задержкой 2 секунды
+setTimeout(function() {
+    // Получаем сумму и ID пользователя из сессии через AJAX
+    fetch('{% url "shop:payment_emulate" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        }
+    }).then(response => {
+        // После успешного платежа перенаправляем на страницу баланса
+        window.location.href = '{% url "accounts:profile_balance" %}';
+    }).catch(error => {
+        console.error('Ошибка платежа:', error);
+        window.location.href = '{% url "accounts:balance_topup" %}';
+    });
+}, 2000);
+</script>
+{% endblock %}

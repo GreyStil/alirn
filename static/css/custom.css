@@ -1,0 +1,232 @@
+/* ========== GENERAL STYLES ========== */
+:root {
+    --primary-color: #1a1a2e;
+    --secondary-color: #16213e;
+    --highlight-color: #e94560;
+    --text-muted: #999;
+    --text-light: #ddd;
+    --border-dark: #333;
+    --success-color: #4CAF50;
+}
+
+body {
+    background-color: var(--primary-color);
+    color: var(--text-light);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ========== NAVBAR ========== */
+.navbar-toggler {
+    border-color: var(--highlight-color);
+}
+
+.navbar-toggler:focus {
+    box-shadow: 0 0 0 0.25rem rgba(233, 69, 96, 0.25);
+}
+
+/* ========== CARDS ========== */
+.card-dark {
+    background-color: var(--secondary-color);
+    border-color: var(--border-dark);
+}
+
+.card-highlight {
+    background-color: var(--secondary-color);
+    border-color: var(--highlight-color);
+}
+
+.card-success {
+    background-color: var(--secondary-color);
+    border-color: var(--success-color);
+}
+
+/* ========== BADGES & LABELS ========== */
+.badge-platform {
+    background-color: #0f3460;
+    color: white;
+}
+
+.badge-genre {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+.text-muted-small {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-bottom: 8px;
+}
+
+/* ========== FORMS ========== */
+.form-select {
+    background-color: var(--secondary-color);
+    border-color: var(--border-dark);
+    color: var(--text-light);
+}
+
+.form-select:focus {
+    background-color: var(--secondary-color);
+    border-color: var(--highlight-color);
+    color: var(--text-light);
+}
+
+.form-control {
+    background-color: var(--secondary-color);
+    border-color: var(--border-dark);
+    color: var(--text-light);
+}
+
+.form-control:focus {
+    background-color: var(--secondary-color);
+    border-color: var(--highlight-color);
+    color: var(--text-light);
+    box-shadow: 0 0 0 0.2rem rgba(233, 69, 96, 0.25);
+}
+
+/* ========== ALERTS ========== */
+.alert-key {
+    background-color: #0f3460;
+    border-color: var(--border-dark);
+    word-break: break-all;
+    font-family: monospace;
+}
+
+.close-btn-text {
+    text-indent: -9999px;
+}
+
+/* ========== CAROUSEL ========== */
+.carousel-caption-dark {
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 20px;
+}
+
+.carousel-control-prev,
+.carousel-control-next {
+    width: 5%;
+}
+
+/* ========== FOOTER ========== */
+.footer-list {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-link:hover {
+    color: var(--highlight-color);
+}
+
+.footer-text {
+    color: var(--text-muted);
+}
+
+/* ========== DISCOUNT BADGE ========== */
+.game-discount {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+/* ========== GAME DETAIL PAGE ========== */
+.game-info-section {
+    background-color: var(--secondary-color);
+    border-color: var(--border-dark);
+}
+
+.game-info-highlight {
+    background-color: var(--secondary-color);
+    border-color: var(--highlight-color);
+}
+
+/* ========== PRICE DISPLAY ========== */
+.price-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.price-current {
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--highlight-color);
+}
+
+.price-original {
+    text-decoration: line-through;
+    color: var(--text-muted);
+    font-size: 18px;
+}
+
+/* ========== FORM STYLES ========== */
+.form-group-inline {
+    display: inline-block;
+}
+
+.form-remove-inline {
+    display: inline;
+}
+
+/* ========== ACCESSIBILITY ========== */
+.btn-close-custom {
+    background: transparent;
+    border: none;
+    color: var(--text-light);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 5px 10px;
+}
+
+.btn-close-custom:hover {
+    color: var(--highlight-color);
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* ========== LOADING ANIMATION ========== */
+.spinner-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+}
+
+/* ========== PAGINATION ========== */
+.pagination {
+    justify-content: center;
+}
+
+.page-link {
+    background-color: var(--secondary-color);
+    border-color: var(--border-dark);
+    color: var(--text-light);
+}
+
+.page-link:hover {
+    background-color: var(--highlight-color);
+    border-color: var(--highlight-color);
+    color: white;
+}
+
+.page-item.active .page-link {
+    background-color: var(--highlight-color);
+    border-color: var(--highlight-color);
+}
