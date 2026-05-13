@@ -13,26 +13,11 @@
             --text-primary: #e0e0e0;
             --accent: #e94560;
         }
-        
-        [data-theme="light"] {
-            --bg-primary: #f8f9fa;
-            --bg-secondary: #ffffff;
-            --bg-accent: #e9ecef;
-            --text-primary: #212529;
-            --accent: #e94560;
-        }
-        
         body { background-color: var(--bg-primary); color: var(--text-primary); }
         .navbar { background-color: var(--bg-secondary); border-bottom: 2px solid var(--accent); }
         .game-card { background-color: var(--bg-accent); }
         .section-title { color: var(--accent); border-bottom: 2px solid var(--accent); }
         a { color: var(--accent); }
-        
-        #theme-toggle {
-            background: none; border: 1px solid #555; color: var(--text-primary);
-            padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 14px;
-        }
-        #theme-toggle:hover { background: var(--bg-accent); }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -44,29 +29,24 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item me-3">
-                        <button id="theme-toggle" onclick="toggleTheme()">🌙 Тема</button>
-                    </li>
+                <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="{% url 'shop:catalog' %}">Каталог</a></li>
                     {% if user.is_authenticated %}
-                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:profile_library' %}">Библиотека</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:profile_keys' %}">🔑 Ключи</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:profile_balance' %}">💰 {{ user.profile.balance }}</a></li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">👤 {{ user.username }}</a>
-                        <ul class="dropdown-menu dropdown-menu-dark">
-                            <li><a class="dropdown-item" href="{% url 'accounts:profile' }">Профиль</a></li>
-                            <li><a class="dropdown-item" href="{% url 'accounts:profile_settings' }">Настройки</a></li>
-                            <li><a class="dropdown-item" href="{% url 'accounts:profile_keys' }">🔑 Мои ключи</a></li>
-                            {% if user.is_staff %}<li><a class="dropdown-item" href="/admin/">Админ</a></li>{% endif %}
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'accounts:logout' }">Выход</a></li>
-                        </ul>
-                    </li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:profile_library' %}">Библиотека</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:profile_keys' %}">🔑 Ключи</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">👤 {{ user.username }}</a>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li><a class="dropdown-item" href="{% url 'accounts:profile' }">Профиль</a></li>
+                                <li><a class="dropdown-item" href="{% url 'accounts:profile_settings' }">Настройки</a></li>
+                                {% if user.is_staff %}<li><a class="dropdown-item" href="/admin/">Админ</a></li>{% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'accounts:logout' }">Выход</a></li>
+                            </ul>
+                        </li>
                     {% else %}
-                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:login' }">Вход</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:register' }">Регистрация</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:login' }">Вход</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:register' }">Регистрация</a></li>
                     {% endif %}
                 </ul>
             </div>
@@ -74,44 +54,26 @@
     </nav>
 
     <div class="container mt-3">
-        {% if messages %}{% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-        {% endfor %}{% endif %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+            {% endfor %}
+        {% endif %}
     </div>
 
     {% block content %}{% endblock %}
 
-    <button id="ai-float-btn" onclick="openAIModal()" style="position:fixed;bottom:25px;right:25px;z-index:9999;background:#e94560;color:white;border:none;width:56px;height:56px;border-radius:50%;font-size:24px;">🤖</button>
+    <!-- Floating AI Button -->
+    <button onclick="openAIModal()" style="position:fixed;bottom:25px;right:25px;z-index:9999;background:#e94560;color:white;border:none;width:56px;height:56px;border-radius:50%;font-size:24px;">🤖</button>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Theme Toggle
-        function toggleTheme() {
-            const html = document.documentElement;
-            if (html.getAttribute('data-theme') === 'light') {
-                html.setAttribute('data-theme', 'dark');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                html.setAttribute('data-theme', 'light');
-                localStorage.setItem('theme', 'light');
-            }
-        }
-        
-        // Load saved theme
-        (function() {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                document.documentElement.setAttribute('data-theme', savedTheme);
-            }
-        })();
-        
         function openAIModal() {
-            const modal = document.createElement('div');
-            modal.innerHTML = `
+            const modalHTML = `
                 <div id="aiModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;" onclick="this.remove()">
                     <div onclick="event.stopImmediatePropagation()" style="background:#1a1a2e;width:90%;max-width:680px;border-radius:16px;overflow:hidden;">
                         <div style="padding:15px 20px;background:#16213e;display:flex;justify-content:space-between;align-items:center;">
-                            <h5 style="margin:0;color:#00d4ff;">🤖 AI Ассистент (Support)</h5>
+                            <h5 style="margin:0;color:#00d4ff;">🤖 AI Ассистент</h5>
                             <button onclick="this.closest('#aiModal').remove()" style="background:none;border:none;color:white;font-size:22px;">&times;</button>
                         </div>
                         <div id="aiChatBody" style="height:380px;overflow-y:auto;padding:15px;background:#0f0f23;font-size:15px;"></div>
@@ -121,30 +83,30 @@
                         </div>
                     </div>
                 </div>`;
-            document.body.appendChild(modal);
-            
-            setTimeout(() => {
-                const input = document.getElementById('aiInput');
-                if (input) input.focus();
-            }, 300);
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
         }
-        
+
         async function sendAIMessage() {
             const input = document.getElementById('aiInput');
             if (!input || !input.value.trim()) return;
-            
+
             const body = document.getElementById('aiChatBody');
             body.innerHTML += `<div style="margin:8px 0;padding:8px 12px;background:#e94560;color:black;border-radius:16px;max-width:80%;margin-left:auto;">${input.value}</div>`;
-            const msg = input.value; input.value = '';
-            
-            const res = await fetch('/shop/ai-chat/', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({message: msg})
-            });
-            const data = await res.json();
-            body.innerHTML += `<div style="margin:8px 0;padding:8px 12px;background:#16213e;border-radius:16px;max-width:80%;">${data.reply}</div>`;
-            body.scrollTop = body.scrollHeight;
+            const msg = input.value.trim();
+            input.value = '';
+
+            try {
+                const res = await fetch('/shop/ai-chat/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message: msg})
+                });
+                const data = await res.json();
+                body.innerHTML += `<div style="margin:8px 0;padding:8px 12px;background:#16213e;border-radius:16px;max-width:80%;">${data.reply}</div>`;
+                body.scrollTop = body.scrollHeight;
+            } catch(e) {
+                body.innerHTML += `<div style="margin:8px 0;padding:8px 12px;background:#16213e;border-radius:16px;max-width:80%;">Ошибка связи с AI.</div>`;
+            }
         }
     </script>
     {% block extra_js %}{% endblock %}
