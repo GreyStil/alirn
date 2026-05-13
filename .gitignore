@@ -1,8 +1,12 @@
-# Django
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+
+# C extensions
 *.so
+
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -22,19 +26,20 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# Django specific
+# Django
 *.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+media/
+staticfiles/
 
-# Media and static
-/media/
-/staticfiles/
-
-# Environment variables
+# Environments
 .env
-.env.*
+.venv
+env/
+venv/
+ENV/
 
 # IDE
 .vscode/
@@ -44,9 +49,7 @@ db.sqlite3-journal
 
 # OS
 .DS_Store
+.DS_Store?
 Thumbs.db
 
-# Virtual environment
-venv/
-env/
-ENV/
+# SQLite (уже в .gitignore)
