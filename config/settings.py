@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,6 +27,10 @@ SECRET_KEY = 'django-insecure-a^0dtx3@to8nk0m*3x^=0evfc#u29!1g5(tnnf+8_@@82u6+jl
 DEBUG = True
 
 ALLOWED_HOSTS = []
+
+
+# RAWG API Key for real games (from .env)
+RAWG_API_KEY = os.environ.get('RAWG_API_KEY', '')
 
 
 # Application definition
