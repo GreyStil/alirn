@@ -121,3 +121,45 @@ class UserProfile(models.Model):
     @property
     def is_support(self):
         return self.role in ['support', 'admin']
+
+
+# ==================== СИСТЕМА ДОСТИЖЕНИЙ ====================
+
+class Achievement(models.Model):
+    RARITY_CHOICES = [
+        ('common', 'Обычное'),
+        ('rare', 'Редкое'),
+        ('epic', 'Эпическое'),
+        ('legendary', 'Легендарное'),
+    ]
+
+    name = models.CharField(max_length=150, verbose_name="Название достижения")
+    description = models.TextField(verbose_name="Описание")
+    icon = models.ImageField(upload_to='achievements/', blank=True, null=True, verbose_name="Иконка")
+    points = models.PositiveIntegerField(default=10, verbose_name="Очки")
+    rarity = models.CharField(max_length=20, choices=RARITY_CHOICES, default='common', verbose_name="Редкость")
+    game = models.ForeignKey(Game, on_delete=models.CASCADE, null=True, blank=True, related_name='achievements', verbose_name="Игра (опционально)")
+    is_hidden = models.BooleanField(default=False, verbose_name="Скрытое достижение")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Достижение"
+        verbose_name_plural = "Достижения"
+
+
+class UserAchievement(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='achievements')
+    achievement = models.ForeignKey(Achievement, on_delete=models.CASCADE)
+    unlocked_at = models.DateTimeField(auto_now_add=True)
+    progress = models.PositiveIntegerField(default=0)  # для прогрессивных достижений
+
+    class Meta:
+        unique_together = ('user', 'achievement')
+        verbose_name = "Достижение пользователя"
+        verbose_name_plural = "Достижения пользователей"
+
+    def __str__(self):
+        return f"{self.user.username} - {self.achievement.name}"
