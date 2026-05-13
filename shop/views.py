@@ -10,26 +10,40 @@ from .models import Game, Review, Ticket, TicketReply
 
 class IndexView(TemplateView):
     template_name = 'shop/index.html'
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['featured_games'] = Game.objects.filter(discount_percent__gt=0)[:5]
-        context['popular_games'] = Game.objects.order_by('-sales_count')[:6]
+        context['popular_games'] = Game.objects.order_by('-sales_count')[:8]
         return context
 
 class CatalogView(View):
     template_name = 'shop/catalog.html'
+    
     def get(self, request):
         games = Game.objects.all()
-        genre = request.GET.get('genre', '')
-        if genre:
-            games = games.filter(genre=genre)
-        paginator = Paginator(games, 12)
-        return render(request, self.template_name, {'games': paginator.get_page(request.GET.get('page', 1)), 'genres': [('action','Action'),('rpg','RPG'),('indie','Indie')]})
+        
+        query = request.GET.get('q', '')
+        if query:
+            games = games.filter(
+                Q(title__icontains=query) |
+                Q(description__icontains=query) |
+                Q(developer__icontains=query)
+            )
+        
+        paginator = Paginator(games, 20)
+        page = request.GET.get('page', 1)
+        games_page = paginator.get_page(page)
+        
+        context = {
+            'games': games_page,
+        }
+        return render(request, self.template_name, context)
 
 class GameDetailView(DetailView):
     model = Game
     template_name = 'shop/game_detail.html'
     context_object_name = 'game'
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['reviews'] = self.object.reviews.all()
@@ -40,6 +54,7 @@ class GameDetailView(DetailView):
 
 class CartView(View):
     template_name = 'shop/cart.html'
+    
     def get(self, request):
         games = request.user.cart.games.all() if request.user.is_authenticated else []
         return render(request, self.template_name, {'games': games})
@@ -62,6 +77,7 @@ class RemoveFromCartView(LoginRequiredMixin, View):
 
 class CheckoutView(LoginRequiredMixin, View):
     template_name = 'shop/checkout.html'
+    
     def get(self, request):
         games = request.user.cart.games.all()
         total = sum(g.current_price for g in games)
@@ -72,6 +88,7 @@ class OrderCompleteView(LoginRequiredMixin, TemplateView):
 
 class SearchView(View):
     template_name = 'shop/search.html'
+    
     def get(self, request):
         query = request.GET.get('q', '')
         games = []
@@ -82,7 +99,9 @@ class SearchView(View):
                 Q(developer__icontains=query)
             )
         paginator = Paginator(games, 12)
-        return render(request, self.template_name, {'query': query, 'games': paginator.get_page(request.GET.get('page', 1))})
+        page = request.GET.get('page', 1)
+        games_page = paginator.get_page(page)
+        return render(request, self.template_name, {'query': query, 'games': games_page})
 
 # ==================== MODERATOR ====================
 class ModeratorReviewsView(UserPassesTestMixin, ListView):
@@ -120,8 +139,10 @@ class TicketListView(LoginRequiredMixin, ListView):
 
 class CreateTicketView(LoginRequiredMixin, View):
     template_name = 'shop/create_ticket.html'
+    
     def get(self, request):
         return render(request, self.template_name)
+    
     def post(self, request):
         subject = request.POST.get('subject', '').strip()
         message = request.POST.get('message', '').strip()
@@ -133,8 +154,8 @@ class CreateTicketView(LoginRequiredMixin, View):
         return render(request, self.template_name)
 
 class TicketDetailView(LoginRequiredMixin, View):
-    template_name = 'shop/ticket_detail.html'
-
+    template_name = 'shop:ticket_detail.html'
+    
     def get(self, request, pk):
         ticket = get_object_or_404(Ticket, pk=pk)
         if ticket.user != request.user and not request.user.profile.is_support:
