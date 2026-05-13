@@ -3,46 +3,67 @@
 {% block title %}Регистрация - Alirn{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-lg-6 offset-lg-3">
-            <div class="card" style="background-color: #16213e; border-color: #e94560;">
-                <div class="card-body">
-                    <h5 class="card-title text-center mb-4">Регистрация</h5>
-                    
-                    <form method="post">
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7">
+            <div class="card steam-card shadow-lg border-0" style="background-color: var(--steam-card-bg); border: 1px solid var(--steam-border);">
+                <div class="card-body p-4 p-md-5">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-user-plus fa-3x mb-3" style="color: var(--steam-accent);"></i>
+                        <h4 class="fw-bold text-white">Регистрация</h4>
+                        <p class="text-muted small">Создайте аккаунт и начните играть</p>
+                    </div>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show py-2" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" novalidate>
                         {% csrf_token %}
-                        
+
                         <div class="mb-3">
-                            <label class="form-label">Имя пользователя</label>
-                            <input type="text" name="username" class="form-control" required>
-                            <small class="text-muted">Только буквы, цифры и символы @/./+/-/_</small>
+                            <label class="form-label text-white-50">Имя пользователя</label>
+                            <input type="text" name="username" class="form-control bg-dark text-white border-secondary" 
+                                   placeholder="Ваш никнейм" required autofocus>
+                            <div class="form-text text-muted small">Только буквы, цифры и @ . + - _</div>
                         </div>
-                        
+
                         <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control" required>
+                            <label class="form-label text-white-50">Email</label>
+                            <input type="email" name="email" class="form-control bg-dark text-white border-secondary" 
+                                   placeholder="your@email.com" required>
                         </div>
-                        
+
                         <div class="mb-3">
-                            <label class="form-label">Пароль</label>
-                            <input type="password" name="password" class="form-control" required>
-                            <small class="text-muted">Минимум 8 символов</small>
+                            <label class="form-label text-white-50">Пароль</label>
+                            <input type="password" name="password" class="form-control bg-dark text-white border-secondary" 
+                                   placeholder="Минимум 8 символов" required>
+                            <div class="form-text text-muted small">Минимум 8 символов</div>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Подтверждение пароля</label>
-                            <input type="password" name="password_confirm" class="form-control" required>
+
+                        <div class="mb-4">
+                            <label class="form-label text-white-50">Подтверждение пароля</label>
+                            <input type="password" name="password_confirm" class="form-control bg-dark text-white border-secondary" 
+                                   placeholder="Повторите пароль" required>
                         </div>
-                        
-                        <button type="submit" class="btn btn-primary w-100 mb-3">Зарегистрироваться</button>
-                        
-                        <hr>
-                        
-                        <p class="text-center">
-                            Уже зарегистрированы? <a href="{% url 'accounts:login' %}">Войдите</a>
-                        </p>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold" 
+                                style="background-color: var(--steam-accent); border: none;">
+                            <i class="fas fa-user-plus me-2"></i> Зарегистрироваться
+                        </button>
                     </form>
+
+                    <div class="text-center mt-4">
+                        <p class="text-muted mb-0 small">
+                            Уже есть аккаунт? 
+                            <a href="{% url 'accounts:login' %}" class="text-info text-decoration-none">Войдите</a>
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
