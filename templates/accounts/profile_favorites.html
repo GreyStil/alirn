@@ -1,90 +1,59 @@
 {% extends 'base.html' %}
 
-{% block title %}Избранное - Alirn{% endblock %}
+{% block title %}Желаемое - Alirn{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="section-title">❤️ Избранное</div>
-    
-    <div class="row">
-        <!-- Боковая навигация -->
-        <div class="col-lg-3">
-            <div class="profile-menu">
-                <a href="{% url 'accounts:profile' %}">Обзор</a>
-                <a href="{% url 'accounts:profile_orders' %}">Мои заказы</a>
-                <a href="{% url 'accounts:profile_library' %}">Библиотека</a>
-                <a href="{% url 'accounts:profile_favorites' %}" class="active">Избранное</a>
-                <a href="{% url 'accounts:profile_balance' %}">💰 Баланс</a>
-                <a href="{% url 'accounts:profile_settings' %}">Настройки</a>
-            </div>
-        </div>
-        
-        <!-- Основной контент -->
-        <div class="col-lg-9">
-            {% if games %}
-                <div class="row">
-                    {% for game in games %}
-                    <div class="col-lg-4 col-md-6 mb-4">
-                        <div class="game-card">
-                            {% if game.image %}
-                                <img src="{{ game.image.url }}" alt="{{ game.title }}">
-                            {% else %}
-                                <img src="https://via.placeholder.com/300x200?text={{ game.title }}" alt="{{ game.title }}">
-                            {% endif %}
-                            <div class="game-card-body">
-                                <div class="game-card-title">{{ game.title }}</div>
-                                <p class="text-muted-small">
-                                    <span class="badge badge-platform">{{ game.get_platform_display }}</span>
-                                </p>
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-heart text-danger me-2"></i> Желаемое</h2>
+        <span class="badge bg-secondary fs-6">{{ games.count }} игр</span>
+    </div>
+
+    {% if games %}
+        <div class="row">
+            {% for game in games %}
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                    <div class="card steam-card h-100">
+                        <img src="{{ game.display_image }}" class="card-img-top" style="height: 180px; object-fit: cover;" alt="{{ game.title }}">
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="card-title">{{ game.title }}</h6>
+                            <p class="card-text text-muted small flex-grow-1">{{ game.developer }}</p>
+
+                            <div class="mt-auto">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <div>
-                                        <span class="game-price">{{ game.current_price }} ₽</span>
-                                        {% if game.discount_percent > 0 %}
-                                            <br><span class="old-price">{{ game.price }} ₽</span>
-                                        {% endif %}
-                                    </div>
+                                    <span class="price-tag">{{ game.current_price }} ₽</span>
+                                    {% if game.discount_percent > 0 %}
+                                        <span class="badge bg-success">-{{ game.discount_percent }}%</span>
+                                    {% endif %}
                                 </div>
-                                <a href="{% url 'shop:game_detail' game.id %}" class="btn btn-primary btn-sm w-100">Подробнее</a>
+
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'shop:add_to_cart' game_id=game.id %}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-cart-plus me-2"></i> В корзину
+                                    </a>
+                                    <a href="{% url 'shop:game_detail' pk=game.id %}" class="btn btn-outline-light btn-sm">
+                                        Подробнее
+                                    </a>
+                                    <a href="{% url 'accounts:remove_from_favorites' game_id=game.id %}" 
+                                       class="btn btn-outline-danger btn-sm">
+                                        <i class="fas fa-trash me-2"></i> Убрать
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    {% endfor %}
                 </div>
-                
-                <!-- Пагинация -->
-                {% if games.has_other_pages %}
-                <nav aria-label="Page navigation">
-                    <ul class="pagination justify-content-center">
-                        {% if games.has_previous %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page=1">Первая</a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ games.previous_page_number }}">Назад</a>
-                            </li>
-                        {% endif %}
-                        
-                        <li class="page-item active">
-                            <span class="page-link">{{ games.number }} / {{ games.paginator.num_pages }}</span>
-                        </li>
-                        
-                        {% if games.has_next %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ games.next_page_number }}">Вперёд</a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ games.paginator.num_pages }}">Последняя</a>
-                            </li>
-                        {% endif %}
-                    </ul>
-                </nav>
-                {% endif %}
-            {% else %}
-                <div class="alert alert-info">
-                    Избранное пусто. <a href="{% url 'shop:catalog' %}">Добавьте игры</a>
-                </div>
-            {% endif %}
+            {% endfor %}
         </div>
-    </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-heart fa-4x text-muted mb-4"></i>
+            <h4>Ваш список желаемого пуст</h4>
+            <p class="text-muted">Добавляйте игры, которые хотите купить позже.</p>
+            <a href="{% url 'shop:catalog' %}" class="btn btn-primary mt-3">
+                Перейти в каталог
+            </a>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}
