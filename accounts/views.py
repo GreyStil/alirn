@@ -9,11 +9,10 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from decimal import Decimal
 
-from shop.models import UserProfile, Cart, Order, BalanceTopUp
+from shop.models import UserProfile, Cart, Order, BalanceTopUp, OrderGame
 
 
 class LoginView(View):
-    """Вход в систему"""
     template_name = 'accounts/login.html'
     
     def get(self, request):
@@ -37,7 +36,6 @@ class LoginView(View):
 
 
 class RegisterView(View):
-    """Регистрация"""
     template_name = 'accounts/register.html'
     
     def get(self, request):
@@ -49,7 +47,6 @@ class RegisterView(View):
         password = request.POST.get('password')
         password_confirm = request.POST.get('password_confirm')
         
-        # Валидация
         if not username or not email or not password:
             messages.error(request, 'Все поля обязательны')
             return render(request, self.template_name)
@@ -66,18 +63,9 @@ class RegisterView(View):
             messages.error(request, 'Пользователь с таким email уже существует')
             return render(request, self.template_name)
         
-        # Создание пользователя
         with transaction.atomic():
-            user = User.objects.create_user(
-                username=username,
-                email=email,
-                password=password
-            )
-            
-            # Создание профиля
+            user = User.objects.create_user(username=username, email=email, password=password)
             UserProfile.objects.create(user=user)
-            
-            # Создание корзины
             Cart.objects.create(user=user)
         
         messages.success(request, 'Регистрация успешна! Войдите в систему')
@@ -85,7 +73,6 @@ class RegisterView(View):
 
 
 class ProfileView(LoginRequiredMixin, TemplateView):
-    """Главная страница профиля"""
     template_name = 'accounts/profile.html'
     login_url = 'accounts:login'
     
@@ -102,64 +89,62 @@ class ProfileView(LoginRequiredMixin, TemplateView):
 
 
 class OrderListView(LoginRequiredMixin, View):
-    """Список заказов"""
     template_name = 'accounts/profile_orders.html'
     login_url = 'accounts:login'
     
     def get(self, request):
-        orders = request.user.orders.all()
+        orders = request.user.orders.all().prefetch_related('order_games__game', 'order_games__key')
         
         paginator = Paginator(orders, 10)
         page = request.GET.get('page', 1)
         orders_page = paginator.get_page(page)
         
-        context = {
-            'orders': orders_page,
-        }
-        
+        context = {'orders': orders_page}
         return render(request, self.template_name, context)
 
 
 class LibraryView(LoginRequiredMixin, View):
-    """Библиотека игр"""
+    """ Библиотека игр с ключами """
     template_name = 'accounts/profile_library.html'
     login_url = 'accounts:login'
     
     def get(self, request):
         games = request.user.profile.owned_games.all()
         
+        # Get keys for owned games
+        order_games = OrderGame.objects.filter(
+            order__user=request.user,
+            game__in=games
+        ).select_related('game', 'key')
+        
+        game_keys = {og.game.id: og.key.key for og in order_games}
+        
         paginator = Paginator(games, 12)
         page = request.GET.get('page', 1)
         games_page = paginator.get_page(page)
         
         context = {
             'games': games_page,
+            'game_keys': game_keys,
         }
-        
         return render(request, self.template_name, context)
 
 
 class FavoritesView(LoginRequiredMixin, View):
-    """Избранное"""
     template_name = 'accounts/profile_favorites.html'
     login_url = 'accounts:login'
     
     def get(self, request):
         games = request.user.profile.favorites.all()
-        
         paginator = Paginator(games, 12)
         page = request.GET.get('page', 1)
         games_page = paginator.get_page(page)
         
-        context = {
-            'games': games_page,
-        }
-        
+        context = {'games': games_page}
         return render(request, self.template_name, context)
 
 
 class SettingsView(LoginRequiredMixin, View):
-    """Настройки профиля"""
     template_name = 'accounts/profile_settings.html'
     login_url = 'accounts:login'
     
@@ -170,7 +155,6 @@ class SettingsView(LoginRequiredMixin, View):
         user = request.user
         profile = user.profile
         
-        # Изменение пароля
         if 'new_password' in request.POST:
             old_password = request.POST.get('old_password')
             new_password = request.POST.get('new_password')
@@ -183,12 +167,10 @@ class SettingsView(LoginRequiredMixin, View):
             else:
                 user.set_password(new_password)
                 user.save()
-                messages.success(request, 'Пароль изменён')
+                messages.success(request, 'Пароль успешно изменён')
         
-        # Изменение email
         if 'new_email' in request.POST:
             new_email = request.POST.get('new_email')
-            
             if User.objects.filter(email=new_email).exclude(id=user.id).exists():
                 messages.error(request, 'Этот email уже используется')
             else:
@@ -196,7 +178,6 @@ class SettingsView(LoginRequiredMixin, View):
                 user.save()
                 messages.success(request, 'Email изменён')
         
-        # Загрузка аватара
         if 'avatar' in request.FILES:
             profile.avatar = request.FILES['avatar']
             profile.save()
@@ -206,15 +187,14 @@ class SettingsView(LoginRequiredMixin, View):
 
 
 class BalanceView(LoginRequiredMixin, View):
-    """Просмотр баланса"""
     template_name = 'accounts/profile_balance.html'
     login_url = 'accounts:login'
     
     def get(self, request):
         profile = request.user.profile
-        topups = request.user.balance_topups.all()
+        topups = request.user.balance_topups.all().order_by('-created_at')
         
-        paginator = Paginator(topups, 20)
+        paginator = Paginator(topups, 15)
         page = request.GET.get('page', 1)
         topups_page = paginator.get_page(page)
         
@@ -222,12 +202,10 @@ class BalanceView(LoginRequiredMixin, View):
             'balance': profile.balance,
             'topups': topups_page,
         }
-        
         return render(request, self.template_name, context)
 
 
 class BalanceTopupView(LoginRequiredMixin, View):
-    """Пополнение баланса"""
     template_name = 'accounts/balance_topup.html'
     login_url = 'accounts:login'
     
@@ -239,18 +217,12 @@ class BalanceTopupView(LoginRequiredMixin, View):
         
         try:
             amount = Decimal(amount_str)
-            
             if amount <= 0:
                 messages.error(request, 'Сумма должна быть больше нуля')
                 return render(request, self.template_name)
             
-            # Сохраняем сумму в сессии для эмуляции платежа
             request.session['topup_amount'] = str(amount)
-            request.session['topup_user_id'] = request.user.id
-            
-            # Перенаправляем на страницу эмуляции платежа
             return redirect('shop:payment_emulate')
-        
-        except (ValueError, Decimal.InvalidOperation):
+        except:
             messages.error(request, 'Неверная сумма')
             return render(request, self.template_name)

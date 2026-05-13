@@ -1,111 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Библиотека - Alirn</title>
+</head>
+<body>
 {% extends 'base.html' %}
-
-{% block title %}Библиотека - Alirn{% endblock %}
+{% block title %}Моя библиотека{% endblock %}
 
 {% block content %}
 <div class="container">
-    <div class="section-title">🎮 Моя библиотека</div>
+    <h2 class="section-title">📚 Моя библиотека</h2>
     
-    <div class="row">
-        <!-- Боковая навигация -->
-        <div class="col-lg-3">
-            <div class="profile-menu">
-                <a href="{% url 'accounts:profile' %}">Обзор</a>
-                <a href="{% url 'accounts:profile_orders' %}">Мои заказы</a>
-                <a href="{% url 'accounts:profile_library' %}" class="active">Библиотека</a>
-                <a href="{% url 'accounts:profile_favorites' %}">Избранное</a>
-                <a href="{% url 'accounts:profile_balance' %}">💰 Баланс</a>
-                <a href="{% url 'accounts:profile_settings' %}">Настройки</a>
+    {% if games %}
+        <div class="row">
+            {% for game in games %}
+            <div class="col-md-4 col-lg-3 mb-4">
+                <div class="game-card h-100">
+                    <img src="{{ game.display_image }}" class="card-img-top" alt="{{ game.title }}">
+                    <div class="game-card-body">
+                        <h5 class="game-card-title">{{ game.title }}</h5>
+                        <p class="text-muted small mb-2">{{ game.developer }}</p>
+                        
+                        {% if game_keys|get_item:game.id %}
+                        <div class="alert alert-success py-2 px-3 mb-3" style="font-size: 0.85rem;">
+                            <strong>Ключ активации:</strong><br>
+                            <code style="font-size: 0.9rem; word-break: break-all;">{{ game_keys|get_item:game.id }}</code>
+                        </div>
+                        {% endif %}
+                        
+                        <a href="{% url 'shop:game_detail' pk=game.id %}" class="btn btn-sm btn-outline-light w-100">Подробнее</a>
+                    </div>
+                </div>
             </div>
+            {% endfor %}
         </div>
         
-        <!-- Основной контент -->
-        <div class="col-lg-9">
-            {% if games %}
-                <div class="row">
-                    {% for game in games %}
-                    <div class="col-lg-4 col-md-6 mb-4">
-                        <div class="game-card">
-                            {% if game.image %}
-                                <img src="{{ game.image.url }}" alt="{{ game.title }}">
-                            {% else %}
-                                <img src="https://via.placeholder.com/300x200?text={{ game.title }}" alt="{{ game.title }}">
-                            {% endif %}
-                            <div class="game-card-body">
-                                <div class="game-card-title">{{ game.title }}</div>
-                                <p class="text-muted-small">
-                                    <span class="badge badge-platform">{{ game.get_platform_display }}</span>
-                                </p>
-                                
-                                <div class="card mt-2" style="background-color: #0f3460; border-color: #333;">
-                                    <div class="card-body" style="padding: 10px;">
-                                        <small><strong>Ключ:</strong></small>
-                                        {% with game_key=game.order_game.first %}
-                                            {% if game_key.key %}
-                                            <div style="font-family: monospace; font-size: 11px; word-break: break-all; color: #999; margin-top: 5px;">
-                                                {{ game_key.key.key|truncatewords:2 }}...
-                                            </div>
-                                            <button class="btn btn-xs btn-outline-primary mt-2" onclick="toggleKey(this, '{{ game_key.key.key }}')">🔓 Показать</button>
-                                            {% endif %}
-                                        {% endwith %}
-                                    </div>
-                                </div>
-                                
-                                <a href="{% url 'shop:game_detail' game.id %}" class="btn btn-primary btn-sm w-100 mt-3">Подробнее</a>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                
-                <!-- Пагинация -->
-                {% if games.has_other_pages %}
-                <nav aria-label="Page navigation">
-                    <ul class="pagination justify-content-center">
-                        {% if games.has_previous %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page=1">Первая</a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ games.previous_page_number }}">Назад</a>
-                            </li>
-                        {% endif %}
-                        
-                        <li class="page-item active">
-                            <span class="page-link">{{ games.number }} / {{ games.paginator.num_pages }}</span>
-                        </li>
-                        
-                        {% if games.has_next %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ games.next_page_number }}">Вперёд</a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ games.paginator.num_pages }}">Последняя</a>
-                            </li>
-                        {% endif %}
-                    </ul>
-                </nav>
+        {% if games.has_other_pages %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if games.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ games.previous_page_number }}">&laquo;</a></li>
                 {% endif %}
-            {% else %}
-                <div class="alert alert-info">
-                    Ваша библиотека пуста. <a href="{% url 'shop:catalog' %}">Начните покупать игры</a>
-                </div>
-            {% endif %}
+                <li class="page-item active"><span class="page-link">{{ games.number }}</span></li>
+                {% if games.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ games.next_page_number }}">&raquo;</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center py-5">
+            <h4>У вас пока нет игр</h4>
+            <p class="text-muted">Купите игры в каталоге, и они появятся здесь.</p>
+            <a href="{% url 'shop:catalog' %}" class="btn btn-primary mt-3">Перейти в каталог</a>
         </div>
-    </div>
+    {% endif %}
 </div>
-
-<script>
-function toggleKey(button, key) {
-    const parent = button.parentElement;
-    const keyDiv = parent.querySelector('div[style*="font-family"]');
-    if (keyDiv.textContent.includes('...')) {
-        keyDiv.textContent = key;
-        button.textContent = '🔒 Скрыть';
-    } else {
-        keyDiv.textContent = key.substring(0, 10) + '...';
-        button.textContent = '🔓 Показать';
-    }
-}
-</script>
 {% endblock %}
