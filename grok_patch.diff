@@ -1,0 +1,76 @@
+diff --git a/.env.example b/.env.example
+index 0000000..1111111 100644
+--- a/.env.example
++++ b/.env.example
+@@ -10,3 +10,4 @@ DEBUG=True
+ ALLOWED_HOSTS=localhost,127.0.0.1
+ SECRET_KEY=your-secret-key-here-change-in-production
+
++RAWG_API_KEY=bc66b8b2cce8418d929d232017e20d24diff 
+--git a/shop/utils/rawg_api.py b/shop/utils/rawg_api.py
+new file mode 100644
+index 0000000..2222222
+--- /dev/null
++++ b/shop/utils/rawg_api.py
+@@ -0,0 +1,85 @@
++import requests
++from django.conf import settings
++
++def search_games(query, page=1, page_size=10):
++    url = "https://api.rawg.io/api/games"
++    params = {
++        'key': settings.RAWG_API_KEY,
++        'search': query,
++        'page': page,
++        'page_size': page_size,
++    }
++    try:
++        response = requests.get(url, params=params, timeout=10)
++        if response.status_code == 200:
++            return response.json()
++    except:
++        return None
++    return None
++
++def get_game_details(game_id):
++    url = f"https://api.rawg.io/api/games/{game_id}"
++    params = {'key': settings.RAWG_API_KEY}
++    try:
++        response = requests.get(url, params=params)
++        if response.status_code == 200:
++            return response.json()
++    except:
++        pass
++    return None
+diff --git a/ai/views.py b/ai/views.py
+index 3333333..4444444 100644
+--- a/ai/views.py
++++ b/ai/views.py
+@@ -10,6 +10,30 @@ def ask_ai(request):
+         user_message = data.get('message', '')
+         
+         # Добавляем поддержку RAWG
++        if "добавь" in user_message.lower() or "найди" in user_message.lower():
++            from shop.utils.rawg_api import search_games
++            from shop.models import Game
++            
++            results = search_games(user_message, page_size=5)
++            if results and results.get('results'):
++                added = 0
++                for item in results['results']:
++                    if not Game.objects.filter(name__iexact=item['name']).exists():
++                        Game.objects.create(
++                            name=item['name'],
++                            description=item.get('description', item.get('summary', ''))[:500],
++                            price=round(random.uniform(10, 60), 2),
++                            image_url=item.get('background_image', ''),
++                            genre=", ".join([g['name'] for g in item.get('genres', [])][:3])
++                        )
++                        added += 1
++                response_text = f"Добавлено {added} новых игр из RAWG!"
++            else:
++                response_text = "Не удалось найти игры по запросу."
++        else:
++            response_text = f"Я понял: {user_message}. Чем ещё могу помочь с проектом?"
++        
++        return JsonResponse({'reply': response_text})
