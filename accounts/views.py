@@ -1,46 +1,33 @@
-from django.shortcuts import render, redirect, get_object_or_create
-from django.views import View
-from django.views.generic import TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib import messages
+class BalanceTopupView(LoginRequiredMixin, View):
+    template_name = 'accounts/balance_topup.html'
 
-# ... остальные импорты ...
+    def get(self, request):
+        return render(request, self.template_name, {'quick_amounts': [500, 1000, 1500, 2000, 5000]})
 
-from shop.utils.achievements import check_and_award_achievements, get_or_create_achievement
+    def post(self, request):
+        try:
+            amount = Decimal(request.POST.get('amount'))
+            if amount > 0:
+                # Создаём запись о пополнении
+                BalanceTopUp.objects.create(user=request.user, amount=amount)
 
-# ... существующий код ...
+                # Автоматически зачисляем на баланс
+                profile = request.user.profile
+                profile.balance += amount
+                profile.save()
 
-class ProfileAchievementsView(LoginRequiredMixin, TemplateView):
-    template_name = 'accounts/profile_achievements.html'
+                # Проверяем и выдаём достижения (включая "Инвестор")
+                new_achievements = check_and_award_achievements(request.user)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user = self.request.user
+                messages.success(request, f'Баланс успешно пополнен на {amount} ₽')
 
-        # Получаем все достижения пользователя
-        user_achievements = user.achievements.select_related('achievement').all().order_by('-unlocked_at')
-        unlocked_ids = set(user_achievements.values_list('achievement_id', flat=True))
+                for ach in new_achievements:
+                    messages.success(request, f'🏆 Получено достижение: {ach.name} (+{ach.points} очков)')
 
-        # Создаём базовые достижения, если их ещё нет
-        default_achievements = [
-            ("Первые шаги", "Совершите свою первую покупку в магазине.", 10, 'common'),
-            ("Коллекционер I", "Соберите 5 игр в своей библиотеке.", 15, 'common'),
-            ("Коллекционер II", "Соберите 10 игр в своей библиотеке.", 25, 'rare'),
-            ("Коллекционер III", "Соберите 50 игр в своей библиотеке.", 50, 'epic'),
-            ("Критик", "Напишите свой первый отзыв на игру.", 10, 'common'),
-            ("Инвестор", "Пополните баланс в первый раз.", 10, 'common'),
-            ("Отзывчивый", "Напишите 5 отзывов.", 20, 'rare'),
-        ]
+                return redirect('accounts:profile_balance')
+            else:
+                messages.error(request, 'Сумма должна быть больше нуля')
+        except:
+            messages.error(request, 'Неверная сумма')
 
-        for name, desc, points, rarity in default_achievements:
-            get_or_create_achievement(name, desc, points, rarity)
-
-        # Все достижения
-        all_achievements = Achievement.objects.all().order_by('rarity', 'points')
-
-        context['user_achievements'] = user_achievements
-        context['all_achievements'] = all_achievements
-        context['unlocked_count'] = user_achievements.count()
-        context['total_count'] = all_achievements.count()
-
-        return context
+        return render(request, self.template_name, {'quick_amounts': [500, 1000, 1500, 2000, 5000]})
