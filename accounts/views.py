@@ -1,6 +1,6 @@
-class RemoveFromFavoritesView(LoginRequiredMixin, View):
-    def post(self, request, game_id):
-        game = get_object_or_404(Game, id=game_id)
-        request.user.profile.favorites.remove(game)
-        messages.success(request, f'"{game.title}" удалена из желаемого')
-        return redirect('accounts:profile_favorites')
+class FavoritesView(LoginRequiredMixin, View):
+    template_name = 'accounts/profile_favorites.html'
+
+    def get(self, request):
+        games = request.user.profile.favorites.all()
+        return render(request, self.template_name, {'games': games})
