@@ -11,15 +11,18 @@
 {% block content %}
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="section-title mb-0">🎮 Каталог игр</h2>
+        <h2 style="color:#fff; font-weight:600;">🎮 Каталог игр</h2>
         <span class="text-muted">{{ games.paginator.count }} игр</span>
     </div>
 
-    <!-- Поиск -->
     <form method="get" class="mb-4">
-        <div class="input-group input-group-lg">
-            <input type="text" name="q" class="form-control" placeholder="Поиск игр..." value="{{ request.GET.q }}">
-            <button class="btn btn-primary" type="submit">Найти</button>
+        <div class="row g-2">
+            <div class="col-md-8">
+                <input type="text" name="q" class="form-control form-control-lg" placeholder="Поиск игр..." value="{{ request.GET.q }}">
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-primary btn-lg w-100" type="submit">Найти игры</button>
+            </div>
         </div>
     </form>
 
@@ -27,29 +30,30 @@
         <div class="row">
             {% for game in games %}
             <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
-                <div class="game-card h-100">
-                    <img src="{{ game.display_image }}" class="card-img-top" alt="{{ game.title }}" style="height: 170px; object-fit: cover;">
-                    <div class="p-3">
-                        <h6 class="mb-1">{{ game.title }}</h6>
-                        <small class="text-muted d-block mb-2">{{ game.developer }}</small>
+                <a href="{% url 'shop:game_detail' pk=game.id %}" class="text-decoration-none">
+                    <div class="game-card h-100">
+                        <img src="{{ game.display_image }}" class="card-img-top" style="height: 175px; object-fit: cover;" alt="{{ game.title }}">
+                        <div class="p-3">
+                            <div class="fw-semibold text-white mb-1">{{ game.title }}</div>
+                            <small class="text-muted d-block mb-2">{{ game.developer }}</small>
 
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="fw-bold fs-5 text-warning">{{ game.current_price }} ₽</span>
-                                {% if game.discount_percent > 0 %}
-                                    <span class="badge bg-success ms-1">-{{ game.discount_percent }}%</span>
-                                {% endif %}
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <div>
+                                    <span class="fw-bold" style="color:#acdbf5; font-size:1.05rem;">{{ game.current_price }} ₽</span>
+                                    {% if game.discount_percent > 0 %}
+                                        <span class="badge bg-success ms-2" style="font-size:0.75rem;">-{{ game.discount_percent }}%</span>
+                                    {% endif %}
+                                </div>
                             </div>
-                            <a href="{% url 'shop:game_detail' pk=game.id %}" class="btn btn-sm btn-primary">Подробнее</a>
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
             {% endfor %}
         </div>
 
         {% if games.has_other_pages %}
-        <nav>
+        <nav class="mt-3">
             <ul class="pagination justify-content-center">
                 {% if games.has_previous %}
                 <li class="page-item"><a class="page-link" href="?page={{ games.previous_page_number }}">&laquo;</a></li>
@@ -64,8 +68,8 @@
 
     {% else %}
         <div class="text-center py-5">
-            <h4>Игр не найдено</h4>
-            <p class="text-muted">Нажмите на кнопку AI внизу справа и напишите "добавь Elden Ring" или "добавь популярные игры"</p>
+            <h4 class="text-muted">Игр не найдено</h4>
+            <p class="text-muted">Нажмите на кнопку <strong>AI</strong> внизу справа и напишите: <code>добавь популярные игры</code></p>
         </div>
     {% endif %}
 </div>

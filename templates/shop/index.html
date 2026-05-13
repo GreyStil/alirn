@@ -6,19 +6,19 @@
 </head>
 <body>
 {% extends 'base.html' %}
-{% block title %}Alirn - Магазин цифровых игр{% endblock %}
+{% block title %}Alirn — Магазин цифровых игр{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<div class="hero-section" style="background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.7)), url('https://picsum.photos/id/1015/2000/800'); background-size: cover; background-position: center; height: 420px; display: flex; align-items: center;">
+<!-- Hero -->
+<div style="background: linear-gradient(rgba(23, 26, 33, 0.85), rgba(23, 26, 33, 0.9)), url('https://picsum.photos/id/1018/2000/900'); background-size: cover; background-position: center; height: 460px; display: flex; align-items: center;">
     <div class="container">
         <div class="row">
             <div class="col-lg-7">
-                <h1 class="display-4 fw-bold text-white">Добро пожаловать в Alirn</h1>
-                <p class="lead text-white-50">Лучший магазин цифровых игр. Реальные игры, честные цены, удобный интерфейс.</p>
+                <h1 class="display-3 fw-bold text-white mb-3">Alirn</h1>
+                <p class="lead text-white-50 fs-4">Магазин цифровых игр.<br>Реальные игры. Удобный интерфейс. Честные цены.</p>
                 <div class="mt-4">
-                    <a href="{% url 'shop:catalog' %}" class="btn btn-primary btn-lg me-3">🎮 В каталог</a>
-                    <button onclick="openAIModal()" class="btn btn-outline-light btn-lg">🤖 AI поможет добавить игры</button>
+                    <a href="{% url 'shop:catalog' %}" class="btn btn-primary btn-lg px-4 py-2 me-3">🎮 В каталог</a>
+                    <button onclick="openAIModal()" class="btn btn-outline-light btn-lg px-4 py-2">🤖 AI поможет найти игры</button>
                 </div>
             </div>
         </div>
@@ -26,38 +26,38 @@
 </div>
 
 <div class="container mt-5">
-    <!-- Popular Games -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="section-title mb-0">Популярные игры</h3>
-        <a href="{% url 'shop:catalog' %}" class="text-decoration-none">Смотреть все →</a>
+    <!-- Popular -->
+    <div class="d-flex justify-content-between align-items-end mb-3">
+        <h3 class="mb-0" style="color:#fff; font-weight:600;">Популярное сейчас</h3>
+        <a href="{% url 'shop:catalog' %}" class="text-decoration-none small">Смотреть все →</a>
     </div>
 
     <div class="row">
         {% for game in popular_games %}
         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-4">
-            <div class="game-card h-100">
-                <img src="{{ game.display_image }}" class="card-img-top" alt="{{ game.title }}" style="height: 160px; object-fit: cover;">
-                <div class="game-card-body p-3">
-                    <h6 class="mb-1">{{ game.title }}</h6>
-                    <small class="text-muted">{{ game.developer }}</small>
-                    <div class="mt-2 d-flex justify-content-between align-items-center">
-                        <span class="fw-bold text-warning">{{ game.current_price }} ₽</span>
-                        <a href="{% url 'shop:game_detail' pk=game.id %}" class="btn btn-sm btn-primary">Купить</a>
+            <a href="{% url 'shop:game_detail' pk=game.id %}" class="text-decoration-none">
+                <div class="game-card h-100">
+                    <img src="{{ game.display_image }}" style="height: 155px; width:100%; object-fit:cover;" alt="{{ game.title }}">
+                    <div class="p-3">
+                        <div class="fw-semibold text-white mb-1" style="font-size:0.95rem; line-height:1.3;">{{ game.title }}</div>
+                        <small class="text-muted d-block mb-2">{{ game.developer }}</small>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="game-price">{{ game.current_price }} ₽</span>
+                            {% if game.discount_percent > 0 %}
+                                <span class="badge bg-success" style="font-size:0.75rem;">-{{ game.discount_percent }}%</span>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
         {% empty %}
         <div class="col-12">
-            <div class="alert alert-secondary">
-                Пока нет игр. Используйте AI-ассистента (кнопка внизу справа), чтобы добавить игры.
+            <div class="alert alert-secondary text-center py-4">
+                Пока нет игр. Нажмите на кнопку <strong>AI</strong> внизу справа и напишите "добавь популярные игры"
             </div>
         </div>
         {% endfor %}
-    </div>
-
-    <div class="text-center mt-4 mb-5">
-        <a href="{% url 'shop:catalog' %}" class="btn btn-outline-light btn-lg">Посмотреть весь каталог →</a>
     </div>
 </div>
 {% endblock %}
