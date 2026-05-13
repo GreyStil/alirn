@@ -1,15 +1,17 @@
 import requests
 from django.conf import settings
 import random
+from django.utils import timezone
 
-def search_games(query: str, page: int = 1, page_size: int = 10):
-    '''Search games using RAWG API'''
+def search_games(query, page=1, page_size=10):
+    '''Search for games using RAWG API'''
     url = 'https://api.rawg.io/api/games'
     params = {
         'key': settings.RAWG_API_KEY,
         'search': query,
         'page': page,
         'page_size': page_size,
+        'ordering': '-rating',
     }
     try:
         response = requests.get(url, params=params, timeout=15)
@@ -19,9 +21,9 @@ def search_games(query: str, page: int = 1, page_size: int = 10):
         print(f'RAWG API error: {e}')
         return None
 
-def get_game_details(game_id: int):
-    '''Get detailed info about a specific game'''
-    url = f'https://api.rawg.io/api/games/{game_id}'
+def get_game_details(rawg_id):
+    '''Get detailed information about a specific game'''
+    url = f'https://api.rawg.io/api/games/{rawg_id}'
     params = {'key': settings.RAWG_API_KEY}
     try:
         response = requests.get(url, params=params, timeout=10)
@@ -31,18 +33,25 @@ def get_game_details(game_id: int):
         return None
 
 def add_game_from_rawg(game_data):
-    '''Helper to create Game object from RAWG data'''
+    '''Create or update Game model from RAWG data'''
     from shop.models import Game
     
-    if Game.objects.filter(name__iexact=game_data['name']).exists():
-        return False
+    name = game_data.get('name')
+    if not name:
+        return None
     
-    Game.objects.create(
-        name=game_data['name'],
+    # Check if game already exists
+    if Game.objects.filter(name__iexact=name).exists():
+        return Game.objects.get(name__iexact=name)
+    
+    # Create new game
+    game = Game.objects.create(
+        name=name,
         description=game_data.get('description_raw', game_data.get('description', ''))[:1000],
         price=round(random.uniform(9.99, 59.99), 2),
         image_url=game_data.get('background_image', ''),
-        genre=', '.join([g['name'] for g in game_data.get('genres', [])][:4]) or 'Action',
-        release_date=game_data.get('released')
+        genre=', '.join([g.get('name') for g in game_data.get('genres', [])][:4]),
+        release_date=game_data.get('released'),
+        rating=game_data.get('rating', 0),
     )
-    return True
+    return game
