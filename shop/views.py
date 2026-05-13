@@ -1,15 +1,27 @@
-class CommunityView(TemplateView):
-    template_name = 'shop/community.html'
+class GameDetailView(DetailView):
+    model = Game
+    template_name = 'shop/game_detail.html'
+    context_object_name = 'game'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        game = self.object
 
-        # Последние отзывы
-        recent_reviews = Review.objects.select_related('user', 'game').order_by('-created_at')[:12]
+        context['reviews'] = game.reviews.all()
 
-        # Последние покупки (анонимизированные)
-        recent_purchases = OrderGame.objects.select_related('order__user', 'game').order_by('-order__created_at')[:10]
+        if self.request.user.is_authenticated:
+            context['user_review'] = game.reviews.filter(user=self.request.user).first()
+            context['is_owned'] = self.request.user.profile.owned_games.filter(id=game.id).exists()
 
-        context['recent_reviews'] = recent_reviews
-        context['recent_purchases'] = recent_purchases
+            # Достижения этой игры
+            game_achievements = game.achievements.all()
+            user_achievements = self.request.user.achievements.filter(
+                achievement__in=game_achievements
+            ).values_list('achievement_id', flat=True)
+
+            context['game_achievements'] = game_achievements
+            context['user_achievements_ids'] = list(user_achievements)
+            context['unlocked_count'] = len(user_achievements)
+            context['total_achievements'] = game_achievements.count()
+
         return context
